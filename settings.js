@@ -8,6 +8,6 @@ const GITHUB_CONFIG = {
 
 // Owner Configuration
 const OWNER_CONFIG = {
-    password: "RulzzOffc",
+    password: "RulzXD",
     sessionTimeout: 30 * 60 * 1000 // 30 minutes
 };
