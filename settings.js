@@ -3,7 +3,7 @@ const GITHUB_CONFIG = {
     owner: "RulzzML",
     repo: "sc",
     path: "database.json",
-    token: "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"
+    token: "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"
 };
 
 // Owner Configuration
