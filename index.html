@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RulzXD Database</title>
+    <link rel="icon" href="logo.jpg">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="settings.js"></script>
+</head>
+<body>
+  
+    <nav class="navbar fixed top-0 left-0 right-0 z-50 px-4 py-2">
+    <div class="container mx-auto flex justify-between items-center">
+     <p class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">
+        RulzXD API
+      </p>
+      <!-- Hamburger Menu -->
+      <div class="hamburger lg:hidden" id="hamburger">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </div>
+    </div>
+  </nav>
+  
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>RulzXD Database</h1>
+            <p>Mengelola nomor telepon menggunakan GitHub sebagai database.</p>
+        </div>
+
+        <!-- Database Display -->
+        <div class="database-container">
+            <div class="database-header">
+                <h2>Database</h2>
+                <div class="count-container">
+                    <span id="numbersCount">Loading...</span>
+                    <span id="lastUpdated"></span>
+                </div>
+            </div>
+            <div id="numbersContainer" class="numbers-grid">
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading database...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="controls">
+            <button id="addBtn" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Number
+            </button>
+            <button id="deleteBtn" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete Number
+            </button>
+            <button id="refreshBtn" class="btn btn-secondary">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Owner Authentication</h3>
+                <button id="closeAuthModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-group">
+                        <input type="password" id="passwordInput" placeholder="Masukkan password">
+                        <button id="togglePassword"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <div id="authError" class="error-message"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmAuth" class="btn btn-primary">Enter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Operation Modal -->
+    <div id="operationModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="operationTitle">Operation</h3>
+                <button id="closeOperationModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="operationContent" class="form-group">
+                    <label>Nomor Telepon</label>
+                    <input type="text" id="phoneNumberInput" placeholder="Example: 81234567890">
+                    <div id="formattedNumberPreview" class="preview-box">
+                        <small>Will be saved :</small>
+                        <div id="formattedNumber" class="preview-number"></div>
+                    </div>
+                </div>
+                <div id="operationError" class="error-message"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelOperation" class="btn btn-secondary">Cancel</button>
+                <button id="confirmOperation" class="btn btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Toast -->
+    <div id="statusToast" class="toast">
+        <div id="statusContent" class="toast-content"></div>
+    </div>
+
+<script>
+    // Application State
+const state = {
+    numbers: [],
+    currentOperation: null,
+    isAuthenticated: false,
+    sessionTimeout: null
+};
+
+// DOM Elements
+const elements = {
+    numbersContainer: document.getElementById('numbersContainer'),
+    numbersCount: document.getElementById('numbersCount'),
+    lastUpdated: document.getElementById('lastUpdated'),
+    addBtn: document.getElementById('addBtn'),
+    deleteBtn: document.getElementById('deleteBtn'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    authModal: document.getElementById('authModal'),
+    passwordInput: document.getElementById('passwordInput'),
+    togglePassword: document.getElementById('togglePassword'),
+    authError: document.getElementById('authError'),
+    confirmAuth: document.getElementById('confirmAuth'),
+    closeAuthModal: document.getElementById('closeAuthModal'),
+    operationModal: document.getElementById('operationModal'),
+    operationTitle: document.getElementById('operationTitle'),
+    phoneNumberInput: document.getElementById('phoneNumberInput'),
+    formattedNumberPreview: document.getElementById('formattedNumberPreview'),
+    formattedNumber: document.getElementById('formattedNumber'),
+    operationError: document.getElementById('operationError'),
+    confirmOperation: document.getElementById('confirmOperation'),
+    closeOperationModal: document.getElementById('closeOperationModal'),
+    cancelOperation: document.getElementById('cancelOperation'),
+    statusToast: document.getElementById('statusToast'),
+    statusContent: document.getElementById('statusContent')
+};
+
+// Initialize the application
+function init() {
+    setupEventListeners();
+    loadNumbers();
+}
+
+// Set up all event listeners
+function setupEventListeners() {
+    // Button actions
+    elements.addBtn.addEventListener('click', () => handleOperationClick('add'));
+    elements.deleteBtn.addEventListener('click', () => handleOperationClick('delete'));
+    elements.refreshBtn.addEventListener('click', refreshData);
+
+    // Auth modal
+    elements.closeAuthModal.addEventListener('click', hideAuthModal);
+    elements.confirmAuth.addEventListener('click', authenticate);
+    elements.togglePassword.addEventListener('click', togglePasswordVisibility);
+
+    // Operation modal
+    elements.closeOperationModal.addEventListener('click', hideOperationModal);
+    elements.cancelOperation.addEventListener('click', hideOperationModal);
+    elements.confirmOperation.addEventListener('click', performOperation);
+    elements.phoneNumberInput.addEventListener('input', formatPhoneNumberInput);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideAuthModal();
+            hideOperationModal();
+        }
+    });
+}
+
+// Handle operation button clicks
+function handleOperationClick(operation) {
+    state.currentOperation = operation;
+    if (state.isAuthenticated) {
+        showOperationModal(operation);
+    } else {
+        showAuthModal();
+    }
+}
+
+// Authentication functions
+function showAuthModal() {
+    elements.passwordInput.value = '';
+    elements.authError.textContent = '';
+    elements.authError.classList.remove('show');
+    elements.authModal.classList.add('show');
+    elements.passwordInput.focus();
+}
+
+function hideAuthModal() {
+    elements.authModal.classList.remove('show');
+}
+
+function togglePasswordVisibility() {
+    const isPassword = elements.passwordInput.type === 'password';
+    elements.passwordInput.type = isPassword ? 'text' : 'password';
+    elements.togglePassword.innerHTML = isPassword ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+}
+
+function authenticate() {
+    const password = elements.passwordInput.value.trim();
+    
+    if (password === OWNER_CONFIG.password) {
+        state.isAuthenticated = true;
+        startSessionTimer();
+        hideAuthModal();
+        showOperationModal(state.currentOperation);
+    } else {
+        showAuthError('Password salah! Hanya owner yang dapat menggunakan fitur ini.');
+        elements.passwordInput.classList.add('shake');
+        setTimeout(() => elements.passwordInput.classList.remove('shake'), 500);
+    }
+}
+
+function showAuthError(message) {
+    elements.authError.textContent = message;
+    elements.authError.classList.add('show');
+}
+
+function startSessionTimer() {
+    clearTimeout(state.sessionTimeout);
+    state.sessionTimeout = setTimeout(() => {
+        state.isAuthenticated = false;
+        showStatus('Session expired. Please login again.', 'warning');
+    }, OWNER_CONFIG.sessionTimeout);
+}
+
+// Operation functions
+function showOperationModal(operation) {
+    elements.operationTitle.textContent = operation === 'add' ? 'Tambahkan Database' : 'Hapus Database';
+    elements.phoneNumberInput.value = '';
+    elements.operationError.textContent = '';
+    elements.operationError.classList.remove('show');
+    elements.formattedNumberPreview.classList.remove('show');
+    
+    if (operation === 'add') {
+        elements.confirmOperation.className = 'btn btn-primary';
+        elements.confirmOperation.innerHTML = '<i class="fas fa-plus"></i> Add';
+    } else {
+        elements.confirmOperation.className = 'btn btn-danger';
+        elements.confirmOperation.innerHTML = '<i class="fas fa-trash"></i> Delete';
+    }
+    
+    elements.operationModal.classList.add('show');
+    setTimeout(() => elements.phoneNumberInput.focus(), 100);
+}
+
+function hideOperationModal() {
+    elements.operationModal.classList.remove('show');
+}
+
+function formatPhoneNumberInput() {
+    let number = elements.phoneNumberInput.value.replace(/\D/g, '');
+    
+    // Ensure starts with 62 (Indonesia country code)
+    if (number.length > 0 && !number.startsWith('62')) {
+        number = '62' + number;
+    }
+    
+    elements.phoneNumberInput.value = number;
+    elements.formattedNumber.textContent = number;
+    
+    if (number.length >= 10) {
+        elements.formattedNumberPreview.classList.add('show');
+    } else {
+        elements.formattedNumberPreview.classList.remove('show');
+    }
+}
+
+function validatePhoneNumber(number) {
+    if (!number) return 'Phone number is required';
+    if (!/^62\d+$/.test(number)) return 'Harus berawal 62 (Indonesia).';
+    if (number.length < 10) return 'Nomor terlalu pendek (minimal 10 nomor).';
+    return null;
+}
+
+async function performOperation() {
+    const number = elements.phoneNumberInput.value.trim();
+    const validationError = validatePhoneNumber(number);
+    
+    if (validationError) {
+        showOperationError(validationError);
+        return;
+    }
+
+    try {
+        if (state.currentOperation === 'add') {
+            await addNumberToDatabase(number);
+        } else {
+            await deleteNumberFromDatabase(number);
+        }
+    } catch (error) {
+        console.error('Operation failed:', error);
+        showStatus(`Failed to ${state.currentOperation} number`, 'error');
+    }
+}
+
+function showOperationError(message) {
+    elements.operationError.textContent = message;
+    elements.operationError.classList.add('show');
+    elements.phoneNumberInput.classList.add('shake');
+    setTimeout(() => elements.phoneNumberInput.classList.remove('shake'), 500);
+}
+
+// Data management functions
+async function loadNumbers() {
+    try {
+        showLoadingState();
+        
+        const response = await fetch(
+            `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
+            {
+                headers: {
+                    'Authorization': `token ${GITHUB_CONFIG.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+
+        if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+
+        const data = await response.json();
+        const content = atob(data.content);
+        state.numbers = content ? JSON.parse(content) : [];
+        
+        renderNumbers();
+        updateLastUpdated();
+        showStatus('Berhasil memuat ulang website..');
+    } catch (error) {
+        console.error('Failed to load numbers:', error);
+        showErrorState(error.message);
+    } finally {
+        elements.refreshBtn.classList.remove('animate-pulse');
+    }
+}
+
+async function addNumberToDatabase(number) {
+    if (state.numbers.includes(number)) {
+        showOperationError('This number already exists in database');
+        return;
+    }
+
+    const newNumbers = [...state.numbers, number];
+    await updateDatabase(newNumbers, `Add number ${number}`);
+    state.numbers = newNumbers;
+    
+    hideOperationModal();
+    renderNumbers();
+    showStatus(`Nomor ${number} berhasil ditambahkan`);
+}
+
+async function deleteNumberFromDatabase(number) {
+    const index = state.numbers.indexOf(number);
+    if (index === -1) {
+        showOperationError('Nomor tidak terdaftar di database.');
+        return;
+    }
+
+    const newNumbers = [...state.numbers];
+    newNumbers.splice(index, 1);
+    await updateDatabase(newNumbers, `Remove number ${number}`);
+    state.numbers = newNumbers;
+    
+    hideOperationModal();
+    renderNumbers();
+    showStatus(`Nomor ${number} berhasil dihapus.`);
+}
+
+async function updateDatabase(numbers, commitMessage) {
+    const response = await fetch(
+        `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
+        {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${GITHUB_CONFIG.token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: commitMessage,
+                content: btoa(JSON.stringify(numbers, null, 2)),
+                sha: await getFileSha()
+            })
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(`Failed to update database: ${response.status}`);
+    }
+}
+
+async function getFileSha() {
+    const response = await fetch(
+        `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
+        {
+            headers: {
+                'Authorization': `token ${GITHUB_CONFIG.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        }
+    );
+
+    const data = await response.json();
+    return data.sha;
+}
+
+// UI rendering functions
+function renderNumbers() {
+    if (state.numbers.length === 0) {
+        elements.numbersContainer.innerHTML = `
+            <div class="loading-state">
+                <i class="fas fa-database"></i>
+                <p>Database is empty</p>
+            </div>
+        `;
+        elements.numbersCount.textContent = '0 numbers';
+        return;
+    }
+
+    elements.numbersCount.textContent = `${state.numbers.length} numbers`;
+    updateLastUpdated();
+    
+    elements.numbersContainer.innerHTML = state.numbers.map(number => `
+        <div class="number-card">
+            <div class="number">${number}</div>
+            <div class="date">${formatDate(new Date())}</div>
+        </div>
+    `).join('');
+}
+
+function showLoadingState() {
+    elements.numbersContainer.innerHTML = `
+        <div class="loading-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading database...</p>
+        </div>
+    `;
+    elements.refreshBtn.classList.add('animate-pulse');
+}
+
+function showErrorState(message) {
+    elements.numbersContainer.innerHTML = `
+        <div class="loading-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Failed to load data</p>
+            <small>${message}</small>
+        </div>
+    `;
+}
+
+function updateLastUpdated() {
+    elements.lastUpdated.textContent = `Jam: ${new Date().toLocaleTimeString()}`;
+}
+
+function formatDate(date) {
+    return date.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+}
+
+function refreshData() {
+    loadNumbers();
+    elements.refreshBtn.classList.add('animate-pulse');
+}
+
+// Status notification
+function showStatus(message, type = 'success') {
+    elements.statusContent.className = 'toast-content';
+    elements.statusContent.classList.add(type);
+    elements.statusContent.innerHTML = `
+        <i class="fas ${getStatusIcon(type)}"></i>
+        <span>${message}</span>
+    `;
+    
+    elements.statusToast.classList.add('show');
+    setTimeout(() => {
+        elements.statusToast.classList.remove('show');
+    }, 5000);
+}
+
+function getStatusIcon(type) {
+    switch (type) {
+        case 'error': return 'fa-exclamation-circle';
+        case 'warning': return 'fa-exclamation-triangle';
+        default: return 'fa-check-circle';
+    }
+}
+
+// Initialize the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
