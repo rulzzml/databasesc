@@ -12,36 +12,6 @@ body {
     padding: 1rem;
 }
 
-.navbar {
-      background-color: #0f172a;
-    }
-    
-.hamburger {
-      cursor: pointer;
-      padding: 10px;
-    }
-
-.hamburger-line {
-      display: block;
-      width: 24px;
-      height: 2px;
-      margin: 5px auto;
-      background-color: white;
-      transition: all 0.5s ease-in-out;
-    }
-    
-        .hamburger.active .hamburger-line:nth-child(1) {
-      transform: translateY(7px) rotate(45deg);
-    }
-
-    .hamburger.active .hamburger-line:nth-child(2) {
-      opacity: 0;
-    }
-
-    .hamburger.active .hamburger-line:nth-child(3) {
-      transform: translateY(-7px) rotate(-45deg);
-    }
-
 /* Header Styles */
 .header {
     text-align: center;
@@ -452,4 +422,18 @@ body {
 
 .toast-content i {
     font-size: 1.25rem;
+}
+
+.copyright {
+  bottom : 0;
+  position: relative;
+  text-align: center;
+  color: black;
+}
+
+.copyright p {
+  bottom: 0;
+  position: relative;
+  text-align: center;
+  font-weight: 800;
 }
