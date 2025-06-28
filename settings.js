@@ -1,6 +1,6 @@
 // GitHub Configuration
 const GITHUB_CONFIG = {
-    owner: "rulzzml",
+    owner: "RulzzML",
     repo: "sc",
     path: "database.json",
     token: "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"
