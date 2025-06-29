@@ -148,8 +148,8 @@ body {
     justify-content: center;
     gap: 1rem;
     flex-wrap: wrap;
-    background-color: #FFFCFB;
-    border-radius: 0.5rem;
+    background-color: #ffff;
+    border-radius: 0.75rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     padding: 1.5rem;
 }
@@ -189,7 +189,7 @@ body {
 }
 
 .btn-secondary {
-    background-color: #e2e8f0;
+    background-color: #e2e8f5;
     color: #1e293b;
 }
 
@@ -436,4 +436,14 @@ body {
   position: relative;
   text-align: center;
   font-weight: 800;
+  margin-bottom: 10px;
+}
+.bujug {
+  bottom: 0;
+  position: relative;
+  text-align: center;
+  font-weight: 400;
+  color: #333;
+  font-size: 8px;
+  
 }
