@@ -278,6 +278,7 @@ body {
     font-size: 0.875rem;
     font-weight: 700;
     color: #334155;
+    left: 0;
 }
 
 .input-group {
@@ -447,18 +448,14 @@ body {
   font-size: 8px;
 }
 
+.lagukontrol {
+  text-align: center;
+}
+
 .lagu {
-  display: flex;
-    justify-content: center;
-    margin-top: 30px;
-    background-color: rgba(255,255,255,0.8);
-    padding: 20px;
-    border-radius: 15px;
-    display: inline-block;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  }
-        .lagu-button {
-            font-size: 30px;
-            cursor: pointer;
-            margin: 0 10px;
-        }
+  margin-top: 30px;
+  background-color: rgba(255,255,255,0.8);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
