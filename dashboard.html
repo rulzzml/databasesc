@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - RulzXD API</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&display=swap');
+
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #0f172a;
+      height: 150vh;
+    }
+
+    
+    .mobile-menu {
+      transform: translateX(-100%);
+      background-color: #0f172a;
+      font-family: 'Poppins', serif;
+      transition: transform 0.5s ease-in-out;
+    }
+
+    .mobile-menu.active {
+      transform: translateX(0);
+      background-color: #0f172a;
+    }
+    
+    .navbar {
+      background-color: #0f172a;
+    }
+
+    .hamburger {
+      cursor: pointer;
+      padding: 10px;
+    }
+
+    .hamburger-line {
+      display: block;
+      width: 24px;
+      height: 2px;
+      margin: 5px auto;
+      background-color: white;
+      transition: all 0.5s ease-in-out;
+    }
+
+    .hamburger.active .hamburger-line:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+
+    .hamburger.active .hamburger-line:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active .hamburger-line:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+    
+    header {
+      margin: 5rem 1.5rem 3rem 1.5rem;
+      padding: 10px 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+    
+    header h1 {
+      font-size: px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    header p {
+      color: white;
+      line-height: 18px;
+      font-size: 15px;
+      font-family: "Poppins", serif;
+    }
+    
+    
+    main {
+      margin-left: 40px;
+      margin-right: 40px;
+      margin-top: 2.2rem;
+    }
+    
+    main h1 {
+     background: linear-gradient(90deg, #ff8a00, #e52e71);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+     font-size: 25px;
+     font-weight: bold;
+     margin-bottom: 8px;
+    }
+    
+    main .item {
+      display: flex;
+      height: 40px;
+      margin: 5px auto;
+      justify-content: space-between;
+      align-items: center;
+      color: black;
+      background-color: rgba(147, 197, 253, 0.1);
+      border-radius: 20px;
+    }
+    
+    main .item .method {
+      margin-left: 20px;
+      font-weight: bold;
+      font-size: 18px;
+      color: white;
+    }
+    
+    main .item .title-api {
+      color: white;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    
+    main .item .endpoint {
+      margin-right: 20px;
+      color: white;
+      font-size: 25px;
+    }
+   
+    
+    main .item .endpoint a:active {
+      background: linear-gradient(90deg, #ff8a00, #e52e71);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+    
+    }
+    
+    footer {
+     padding: 20px;
+     margin-top: 2.5rem;
+     background-color: #0f172a;
+     text-align: center;
+     color: white;
+     opacity: .8;
+    }
+    
+  </style>
+</head>
+<body class="text-gray-200">
+
+  <!-- Navbar -->
+  <nav class="navbar fixed top-0 left-0 right-0 z-50 px-4 py-2">
+    <div class="container mx-auto flex justify-between items-center">
+     <p class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">
+        RulzXD API
+      </p>
+      <!-- Hamburger Menu -->
+      <div class="hamburger lg:hidden" id="hamburger">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </div>
+    </div>
+  </nav>
+  
+
+
+<header class="animate__animated animate__fadeInUp">
+  <h1 class="text-3xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">RulzXD API</h1>
+  <p>RulzXD API adalah penyedia layanan REST API keren yang kasih kamu 50+ fitur siap pakai. Dari download konten, AI, sampai tools produktif - semua bisa diakses pake API kita!</p>
+</header>
+
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu fixed top-0 left-0 h-full w-60 bg-gray-800 z-40 p-6 lg:hidden">
+    <div class="flex flex-col space-y-6 mt-16">
+      <a href="/" class="hover:text-blue-400 text-white transition-colors"> Home</a>
+      <a href="https://wa.me/6285133226206" class="hover:text-blue-400 text-white transition-colors"> Contact</a>
+      <a href="https://youtube.com/@bangrulzz44" class="hover:text-blue-400 text-white transition-colors"> YouTube</a>
+      <a href="https://whatsapp.com/channel/0029VaprsPG6hENim13l6v23" class="hover:text-blue-400 text-white transition-colors"> Information</a>
+      <a href="https://www.rulzzofficial.my.id" class="hover:text-blue-400 text-white transition-colors">Portofolio</a>
+    </div>
+  </div>
+  
+<main class="animate__animated animate__fadeInUp">
+    <h1 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">Order Kuota Gateway</h1>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Create Payment</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/orkut/createpayment?apikey=&amount=&codeqr="></a></p>
+     </div>
+          <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Cek Status</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/orkut/cekstatus?apikey=&merchant=&keyorkut="></a></p>
+     </div>
+</main>
+
+<main class="animate__animated animate__fadeInUp">
+  <h1 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">
+    ShopeePay Gateway
+  </h1>
+
+  <div class="item">
+    <p class="method">GET</p>
+    <p class="title-api">Create Payment</p>
+    <p class="endpoint">
+      <a target="_blank" class="fas fa-arrow-circle-right"
+         href="https://api.rulzzofficial.my.id/api/shopeepay/create?client_id=&secret_key=&merchant_ext_id=&amount="></a>
+    </p>
+  </div>
+
+  <div class="item">
+    <p class="method">GET</p>
+    <p class="title-api">Cek Status</p>
+    <p class="endpoint">
+      <a target="_blank" class="fas fa-arrow-circle-right"
+         href="https://api.rulzzofficial.my.id/api/shopeepay/cekstatus?client_id=&secret_key=&merchant_ext_id=&qr_id="></a>
+    </p>
+  </div>
+</main>
+
+<main class="animate__animated animate__fadeInUp">
+  <h1 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">Virtusim</h1>
+
+  <div class="item">
+    <p class="method">GET</p>
+    <p class="title-api">Service</p>
+    <p class="endpoint"><a target="_blank" href="https://api.rulzzofficial.my.id/vs/services?bridge_token=YOUR_BRIDGE_TOKEN">/vs/services</a></p>
+  </div>
+
+  <div class="item">
+    <p class="method">GET</p>
+    <p class="title-api">Get Number</p>
+    <p class="endpoint"><a target="_blank" href="https://api.rulzzofficial.my.id/vs/get_number?bridge_token=YOUR_BRIDGE_TOKEN&app=telegram&country=6">/vs/get_number</a></p>
+  </div>
+
+  <div class="item">
+    <p class="method">GET</p>
+    <p class="title-api">Get SMS</p>
+    <p class="endpoint"><a target="_blank" href="https://api.rulzzofficial.my.id/vs/get_sms?bridge_token=YOUR_BRIDGE_TOKEN&id=12345">/vs/get_sms</a></p>
+  </div>
+
+  <div class="item">
+    <p class="method">GET</p>
+    <p class="title-api">Cancel</p>
+    <p class="endpoint"><a target="_blank" href="https://api.rulzzofficial.my.id/vs/cancel?bridge_token=YOUR_BRIDGE_TOKEN&id=12345">/vs/cancel</a></p>
+  </div>
+
+  <div class="item">
+    <p class="method">GET</p>
+    <p class="title-api">Balance</p>
+    <p class="endpoint"><a target="_blank" href="https://api.rulzzofficial.my.id/vs/balance?bridge_token=YOUR_BRIDGE_TOKEN">/vs/balance</a></p>
+  </div>
+
+  <div class="item">
+    <p class="method">GET</p>
+    <p class="title-api">Raw</p>
+    <p class="endpoint"><a target="_blank" href="https://api.rulzzofficial.my.id/vs/raw?bridge_token=YOUR_BRIDGE_TOKEN&action=services">/vs/raw</a></p>
+  </div>
+</main>
+  
+<main class="animate__animated animate__fadeInUp">
+    <h1 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">Downloader</h1>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Tiktok</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/download/tiktokdl?url="></a></p>
+     </div>
+          <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Facebook</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/download/fbdl?url="></a></p>
+     </div>
+       <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Instagram</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/download/igdl?url="></a></p>
+     </div>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Ytmp3</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/download/ytmp3?url="></a></p>
+     </div>   
+       <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Ytmp4</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/download/ytmp4?url="></a></p>
+     </div>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Capcut</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/download/capcut?url"></a></p>
+     </div>   
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Doodstream</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/download/doodstream?url="></a></p>
+     </div>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Google Drive</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/download/gdrive?url="></a></p>
+     </div>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Pinterest Video</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/download/pindlvid?url="></a></p>
+     </div> 
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Soundcloud</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/download/soundcloud?url="></a></p>
+     </div>                                    
+ </main>
+ 
+ <main class="animate__animated animate__fadeInUp">
+    <h1 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">AI Cerdas</h1>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Openai</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/ai/openai?msg="></a></p>
+     </div>
+          <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Openai Prompt</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/ai/openai-prompt?prompt=&msg="></a></p>
+     </div>
+       <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">GPT 4</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/ai/gpt4?text="></a></p>
+     </div>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">GPT 3.5 Turbo</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/ai/gpt-3-5-turbo?text="></a></p>
+     </div>   
+       <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Gemini</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/ai/gemini?text="></a></p>
+     </div>
+</main>
+
+ <main class="animate__animated animate__fadeInUp">
+    <h1 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">Tools</h1>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Bstation</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/search/bstation?q="></a></p>
+     </div>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Google Image</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/search/gimage?q="></a></p>
+     </div>
+          <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Pinterest</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/search/pinterest?q="></a></p>
+     </div>
+       <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Youtube Search</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/search/ytsearch?q="></a></p>
+     </div>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Happymod</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/search/happymod?q="></a></p>
+     </div>   
+      <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Sfilemobi</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/search/sfile?q="></a></p>
+     </div>
+      <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Tiktok Search</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/search/tiktoksearch?q="></a></p>
+     </div> 
+      <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Lyrics</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/search/lyrics?q="></a></p>
+     </div>              
+      <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Remini</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/tools/remini?url"></a></p>
+     </div>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Shortlink Tinyurl</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/tools/tinyurl?url="></a></p>
+     </div>
+       <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Shortlink Isgd</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/tools/isgd?url="></a></p>
+     </div>   
+</main>
+
+ <main class="animate__animated animate__fadeInUp">
+    <h1 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">Stalking</h1>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Tiktok Stalk</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/tools/tiktokstalk?user="></a></p>
+     </div>
+          <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Github Stalk</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/tools/githubstalk?user="></a></p>
+     </div>
+</main>
+
+ <main class="animate__animated animate__fadeInUp">
+    <h1 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">Image Creator</h1>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Brat</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/tools/bratgenerator?text="></a></p>
+     </div>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Pornhub</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/imagecreator/pornhub?text1=&text2="></a></p>
+     </div>     
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">Quotely</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id/api/imagecreator/qc?text=&fotoUrl=&nama="></a></p>
+     </div>
+</main>
+
+ <main class="animate__animated animate__fadeInUp">
+    <h1 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">Pterodactyl</h1>
+     <div class="item">
+       <p class="method">Get</p>
+       <p class="title-api">List Panel</p>
+       <p class="endpoint"><a target="blank" class="fas fa-arrow-circle-right" href="https://api.rulzzofficial.my.id"></a></p>
+     </div>
+</main>
+<footer>
+  <span>© 2024 RulzXD API. All rights reserved.</span>
+</footer>
+
+<script>
+  // Mobile menu functionality
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.querySelector('.mobile-menu');
+
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('active');
+    mobileMenu.classList.toggle('active');
+  });
+
+  // Close mobile menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!hamburger.contains(e.target) &&  !mobileMenu.contains(e.target)) {
+      hamburger.classList.remove('active');
+      mobileMenu.classList.remove('active');
+    }
+  });
+</script>
+</body>
+</html>
