@@ -1,3 +1,12 @@
+// Di awal file, tambahkan:
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 const express = require("express");
 const sqlite3 = require("sqlite3");
 const { open } = require("sqlite");
@@ -20,15 +29,45 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname)));
 
 // DB setup
+// DB setup
 let db;
-(async () => {
-  db = await open({
-    filename: "./auth.db",
-    driver: sqlite3.Database,
-  });
-  const sql = fs.readFileSync("./migrations/001_init.sql", "utf-8");
-  await db.exec(sql);
-})();
+let dbInitialized = false;
+
+const initializeDB = async () => {
+  if (dbInitialized) return;
+  
+  try {
+    // Pastikan folder exists
+    const dbDir = path.dirname('./auth.db');
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+
+    db = await open({
+      filename: './auth.db',
+      driver: sqlite3.Database,
+    });
+    
+    // Jalankan migrasi
+    const migrationPath = path.join(__dirname, 'migrations', '001_init.sql');
+    if (fs.existsSync(migrationPath)) {
+      const sql = fs.readFileSync(migrationPath, 'utf-8');
+      await db.exec(sql);
+      console.log('Database migrated successfully');
+    } else {
+      throw new Error('Migration file not found');
+    }
+    
+    dbInitialized = true;
+    console.log('Database initialized successfully');
+  } catch (error) {
+    console.error('Database initialization failed:', error);
+    throw error;
+  }
+};
+
+// Panggil initializeDB saat aplikasi dimulai
+initializeDB().catch(console.error);
 
 // Serve index.html
 app.get("/", (req, res) => {
@@ -68,30 +107,13 @@ app.post("/api/auth/login", async (req, res) => {
   res.json({ success: true, token });
 });
 
-// Google Auth (credential dari frontend)
-app.post("/api/auth/google", async (req, res) => {
-  const { credential } = req.body;
-  const payload = JSON.parse(Buffer.from(credential.split(".")[1], "base64").toString());
-
-  let user = await db.get("SELECT * FROM users WHERE email = ?", [payload.email]);
-  if (!user) {
-    await db.run("INSERT INTO users (email, name, provider) VALUES (?, ?, ?)", [
-      payload.email,
-      payload.name,
-      "google",
-    ]);
-    user = await db.get("SELECT * FROM users WHERE email = ?", [payload.email]);
-  }
-
-  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
-  res.json({ success: true, token });
-});
-
-// Google callback (verifikasi token Google)
+// Hapus endpoint /api/auth/google yang lama, gunakan yang ini saja:
 app.post("/auth/google/callback", async (req, res) => {
   try {
     const { credential } = req.body;
-    if (!credential) return res.status(400).json({ error: "Credential not found" });
+    if (!credential) {
+      return res.status(400).json({ error: "Credential not found" });
+    }
 
     const ticket = await client.verifyIdToken({
       idToken: credential,
@@ -99,17 +121,46 @@ app.post("/auth/google/callback", async (req, res) => {
     });
     const payload = ticket.getPayload();
 
+    // Cari atau buat user
+    let user = await db.get("SELECT * FROM users WHERE email = ?", [payload.email]);
+    if (!user) {
+      await db.run(
+        "INSERT INTO users (email, name, provider) VALUES (?, ?, ?)",
+        [payload.email, payload.name, "google"]
+      );
+      user = await db.get("SELECT * FROM users WHERE email = ?", [payload.email]);
+    }
+
     const token = jwt.sign(
-      { id: payload.sub, email: payload.email, name: payload.name },
+      { id: user.id, email: user.email, name: user.name },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.json({ message: "Login sukses", jwt: token, user: payload });
+    res.json({ 
+      success: true, 
+      message: "Login sukses", 
+      token, 
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name
+      } 
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Login gagal" });
+    console.error("Google auth error:", err);
+    res.status(500).json({ success: false, error: "Login gagal" });
   }
+});
+
+// Tambahkan error handling middleware di akhir
+app.use((error, req, res, next) => {
+  console.error("Unhandled error:", error);
+  res.status(500).json({ 
+    success: false, 
+    message: "Internal server error",
+    error: process.env.NODE_ENV === 'development' ? error.message : undefined
+  });
 });
 
 // Fallback
