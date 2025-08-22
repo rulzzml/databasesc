@@ -5,19 +5,19 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const path = require("path");
+const fs = require("fs");
 const { OAuth2Client } = require("google-auth-library");
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static("."));
+app.use(express.static(path.join(__dirname)));
 
 // DB setup
 let db;
@@ -26,7 +26,6 @@ let db;
     filename: "./auth.db",
     driver: sqlite3.Database,
   });
-  const fs = require("fs");
   const sql = fs.readFileSync("./migrations/001_init.sql", "utf-8");
   await db.exec(sql);
 })();
@@ -51,7 +50,7 @@ app.post("/api/auth/register", async (req, res) => {
       name,
     ]);
     res.json({ success: true, message: "Registrasi berhasil!" });
-  } catch (err) {
+  } catch {
     res.status(400).json({ success: false, message: "Email sudah digunakan!" });
   }
 });
@@ -88,22 +87,7 @@ app.post("/api/auth/google", async (req, res) => {
   res.json({ success: true, token });
 });
 
-// Protected API
-app.get("/api/dashboard", async (req, res) => {
-  const auth = req.headers.authorization;
-  if (!auth) return res.status(401).json({ success: false, message: "Unauthorized" });
-
-  try {
-    const token = auth.split(" ")[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await db.get("SELECT id, email, name FROM users WHERE id = ?", [decoded.id]);
-    res.json({ success: true, user });
-  } catch (err) {
-    res.status(401).json({ success: false, message: "Invalid token" });
-  }
-});
-
-// Google callback
+// Google callback (verifikasi token Google)
 app.post("/auth/google/callback", async (req, res) => {
   try {
     const { credential } = req.body;
@@ -121,24 +105,17 @@ app.post("/auth/google/callback", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.json({
-      message: "Login sukses",
-      jwt: token,
-      user: { email: payload.email, name: payload.name, picture: payload.picture },
-    });
+    res.json({ message: "Login sukses", jwt: token, user: payload });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Login gagal" });
   }
 });
 
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send("Error");
-});
-
 // Fallback
 app.use((req, res) => {
-  res.send("Hello World :)");
+  res.status(404).send("404 Not Found");
 });
+
+// 👉 export app (bukan listen!)
+module.exports = app;
