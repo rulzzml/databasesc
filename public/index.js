@@ -29,6 +29,14 @@ let db;
   await db.exec(sql);
 })();
 
+app.get('/', (req, res) => {
+res.sendFile(path.join(__dirname, 'index.html'));
+})
+
+app.get('/dashboard', (req, res) => {
+res.sendFile(path.join(__dirname, 'dashboard.html'));
+})
+
 // Register
 app.post("/api/auth/register", async (req, res) => {
   const { email, password, name } = req.body;
