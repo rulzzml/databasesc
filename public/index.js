@@ -1,9 +1,9 @@
-import express from "express";
-import sqlite3 from "sqlite3";
-import { open } from "sqlite";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+const express = require("express");
+const sqlite3 = require("sqlite3");
+const { open } = require("sqlite");
+const bcrypt = require('bcrypt');
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
 
 dotenv.config();
 
@@ -131,6 +131,16 @@ app.post("/auth/google/callback", async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Login gagal" });
   }
+  
+  app.use((err, req, res, next) => {
+  console.log(err.stack);
+  res.status(500).send("Error");
+});
+
+
+app.use((req, res, next) => {
+res.send("Hello World :)")
+});
 });
 
 app.listen(PORT, () => {
