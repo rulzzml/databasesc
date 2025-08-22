@@ -20,6 +20,7 @@ const { OAuth2Client } = require("google-auth-library");
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-key";
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -137,28 +138,59 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
+// API endpoint untuk login
 app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body;
+  
   try {
     const user = await db.get("SELECT * FROM users WHERE email = ?", [email]);
-    if (!user) return res.status(400).json({ success: false, message: "User tidak ditemukan!" });
+    if (!user) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "User tidak ditemukan!" 
+      });
+    }
 
     const valid = await bcrypt.compare(password, user.password || "");
-    if (!valid) return res.status(400).json({ success: false, message: "Password salah!" });
+    if (!valid) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Password salah!" 
+      });
+    }
 
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
-    res.json({ success: true, token, user: { id: user.id, email: user.email, name: user.name } });
+    const token = jwt.sign({ 
+      id: user.id, 
+      email: user.email 
+    }, JWT_SECRET, { expiresIn: "1h" });
+    
+    res.json({ 
+      success: true, 
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name
+      }
+    });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
   }
 });
 
+// API endpoint untuk Google auth
 app.post("/api/auth/google", async (req, res) => {
   try {
     const { credential } = req.body;
     if (!credential) {
-      return res.status(400).json({ error: "Credential not found" });
+      return res.status(400).json({ 
+        success: false, 
+        error: "Credential not found" 
+      });
     }
 
     const ticket = await client.verifyIdToken({
@@ -194,7 +226,10 @@ app.post("/api/auth/google", async (req, res) => {
     });
   } catch (err) {
     console.error("Google auth error:", err);
-    res.status(500).json({ success: false, error: "Login gagal" });
+    res.status(500).json({ 
+      success: false, 
+      error: "Login gagal" 
+    });
   }
 });
 
@@ -235,6 +270,9 @@ app.use("/api/*", (req, res) => {
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+app.listen(PORT, () => {
+  console.log(`Server Telah Berjalan > http://localhost:${PORT}`)
+})
 
 // Export app untuk Vercel
 module.exports = app;
