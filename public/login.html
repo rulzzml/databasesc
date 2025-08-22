@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login dengan Google</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .login-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+
+        .login-btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background-color: #3367d6;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #777;
+        }
+
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .divider::before {
+            margin-right: 10px;
+        }
+
+        .divider::after {
+            margin-left: 10px;
+        }
+
+        .google-btn-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .g_id_signin {
+            width: 100%;
+            height: 42px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .footer {
+            margin-top: 30px;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #4285f4;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <img src="https://placehold.co/150x50?text=MyApp&font=roboto" alt="Logo aplikasi dengan nama 'MyApp' menggunakan font modern" />
+        </div>
+        
+        <h1>Masuk ke Akun Anda</h1>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <button type="submit" class="login-btn">Masuk</button>
+        </form>
+        
+        <div class="divider">atau</div>
+        
+        <div class="google-btn-container">
+            <div id="g_id_onload"
+                 data-client_id="989960234815-22rinl69v8q50kus2v17b408tol1pb1v.apps.googleusercontent.com"
+                 data-context="signin"
+                 data-ux_mode="popup"
+                 data-callback="handleGoogleSignIn"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-shape="rectangular"
+                 data-theme="outline"
+                 data-text="signin_with"
+                 data-size="large"
+                 data-logo_alignment="left">
+            </div>
+        </div>
+        
+        <div class="footer">
+            Belum punya akun? <a href="#">Daftar sekarang</a>
+        </div>
+    </div>
+
+    <script>
+        function handleGoogleSignIn(response) {
+            // Handle the Google Sign-In response
+            console.log("Google sign-in response:", response);
+            
+            // The response contains the user's ID token and basic profile information
+            const credential = response.credential;
+            
+            // You can send this to your server for verification and authentication
+            authenticateWithBackend(credential);
+        }
+
+        function authenticateWithBackend(credential) {
+            // In a real application, you would send the credential to your backend
+            // for verification and authentication
+            console.log("Sending credential to backend:", credential);
+            
+            fetch('/api/auth/google', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ credential: credential })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Authentication successful:", data);
+                // Redirect user or update UI
+                window.location.href = "/dashboard";
+            })
+            .catch(error => {
+                console.error("Authentication error:", error);
+                alert("Terjadi kesalahan saat login. Silakan coba lagi.");
+            });
+        }
+
+        // Handle regular form submission
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // In a real application, you would validate and send to your server
+            console.log("Email:", email);
+            console.log("Password:", password);
+            
+            // Simulate login
+            alert(`Login dengan email ${email} berhasil! (Contoh)`);
+        });
+        
+        function handleCredentialResponse(response) {
+      fetch("/auth/google/callback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential: response.credential }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.jwt) {
+            alert("Login sukses! Selamat datang " + data.user.name);
+            console.log("Token JWT:", data.jwt);
+          } else {
+            alert("Login gagal");
+          }
+        })
+        .catch(err => console.error(err));
+    }
+    
+    function handleGoogle(response) {
+      fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential: response.credential })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          localStorage.setItem("token", data.token);
+          window.location = "/dashboard.html";
+        }
+      });
+    }
+    </script>
+</body>
+</html>
