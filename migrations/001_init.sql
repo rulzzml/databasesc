@@ -1,17 +1,10 @@
+-- Buat tabel users untuk sistem login
 CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     password TEXT,
-    name TEXT NOT NULL,
+    name TEXT,
     provider TEXT DEFAULT 'local',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS sessions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    token TEXT NOT NULL,
-    expires_at DATETIME NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id)
+    provider_id TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
