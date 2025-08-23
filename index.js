@@ -8,83 +8,54 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const express = require("express");
-const sqlite3 = require("sqlite3");
-const { open } = require("sqlite");
+const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const path = require("path");
-const fs = require("fs");
 const { OAuth2Client } = require("google-auth-library");
+const fs = require("fs");
+
+(async () => {
+  try {
+    const initSql = fs.readFileSync(path.join(__dirname, "migrations/001_init.sql"), "utf-8");
+    await pool.query(initSql);
+    console.log("✅ Database ready");
+  } catch (err) {
+    console.error("❌ Error init DB:", err);
+  }
+})();
 
 dotenv.config();
-
 const app = express();
-const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET;
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Postgres connection
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname)));
 
-// DB setup
-let db;
-let dbInitialized = false;
-
-const initializeDB = async () => {
-  if (dbInitialized) return;
-  
-  try {
-    db = await open({
-      filename: './auth.db',
-      driver: sqlite3.Database,
-    });
-    
-    // Jalankan migrasi
-    const migrationPath = path.join(__dirname, 'migrations', '001_init.sql');
-    if (fs.existsSync(migrationPath)) {
-      const sql = fs.readFileSync(migrationPath, 'utf-8');
-      await db.exec(sql);
-      console.log('Database migrated successfully');
-    } else {
-      console.warn('Migration file not found, using default schema');
-      // Buat tabel default jika file migrasi tidak ada
-      await db.exec(`
-        CREATE TABLE IF NOT EXISTS users (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          email TEXT UNIQUE NOT NULL,
-          password TEXT,
-          name TEXT,
-          provider TEXT DEFAULT 'local',
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-    }
-    
-    dbInitialized = true;
-    console.log('Database initialized successfully');
-  } catch (error) {
-    console.error('Database initialization failed:', error);
-    throw error;
-  }
-};
-
-// Middleware untuk memastikan DB terinisialisasi
-app.use(async (req, res, next) => {
-  if (!dbInitialized) {
-    try {
-      await initializeDB();
-    } catch (error) {
-      return res.status(500).json({ 
-        success: false, 
-        message: "Database initialization failed" 
-      });
-    }
-  }
-  next();
-});
+// Init DB table
+(async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      password TEXT,
+      name TEXT,
+      provider TEXT DEFAULT 'local',
+      provider_id TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+})();
 
 // Serve HTML files
 app.get("/", (req, res) => {
