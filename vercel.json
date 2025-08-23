@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "builds": [{ "src": "index.js", "use": "@vercel/node" }],
+  "builds": [{ "src": "index.html", "use": "@vercel/node" }],
   "routes": [
     { "src": "/", "dest": "/index.html" },
     { "src": "/(.*\\.(css|js|png|jpg|jpeg|svg|ico|gif|webp|txt))", "dest": "/$1" },
