@@ -1,11 +1,11 @@
 {
   "name": "Rulzz OfficiaL Login Form Full Stack",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "index.html",
   "type": "module",
   "scripts": {
-    "dev": "nodemon index.js",
-    "start": "node index.js"
+    "dev": "nodemon index.html",
+    "start": "node index.html"
   },
   "keywords": [
     "authentication",
