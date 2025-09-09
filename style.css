@@ -197,6 +197,11 @@ body {
     background-color: #cbd5e1;
 }
 
+.addNews a {
+  text-decoration: none;
+  color: #fff;
+}
+
 /* Modals */
 .modal {
     position: fixed;
