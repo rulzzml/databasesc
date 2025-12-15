@@ -61,50 +61,64 @@ app.post('/api/numbers', async (req, res) => {
     try {
         const { numbers, commitMessage, password } = req.body;
         
-        // Validasi input
-        if (!Array.isArray(numbers)) {
+        // Validasi input lebih ketat
+        if (!numbers || !Array.isArray(numbers)) {
             return res.status(400).json({
                 success: false,
                 error: 'Numbers must be an array'
             });
         }
         
-        if (!commitMessage || !password) {
+        if (!commitMessage || typeof commitMessage !== 'string') {
             return res.status(400).json({
                 success: false,
-                error: 'Commit message and password are required'
+                error: 'Valid commit message is required'
             });
         }
         
-        // Auth check
-        if (password !== OWNER_CONFIG.password) {
+        if (!password || password !== OWNER_CONFIG.password) {
             return res.status(401).json({ 
                 success: false, 
                 error: 'Invalid password' 
             });
         }
         
-        // Get current SHA
-        const getResponse = await axios.get(
-            `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
-            {
-                headers: {
-                    'Authorization': `token ${GITHUB_CONFIG.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
+        let sha = null;
+        
+        try {
+            // Coba dapatkan SHA dari file yang ada
+            const getResponse = await axios.get(
+                `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
+                {
+                    headers: {
+                        'Authorization': `token ${GITHUB_CONFIG.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
                 }
+            );
+            sha = getResponse.data.sha;
+        } catch (error) {
+            // Jika file belum ada (404), sha akan tetap null
+            if (error.response && error.response.status !== 404) {
+                throw error; // Lempar error selain 404
             }
-        );
+        }
         
-        const sha = getResponse.data.sha;
+        // Prepare update payload
+        const payload = {
+            message: commitMessage,
+            content: Buffer.from(JSON.stringify(numbers, null, 2)).toString('base64')
+        };
         
-        // Update to GitHub
-        const updateResponse = await axios.put(
+        // Tambahkan SHA hanya jika file sudah ada
+        if (sha) {
+            payload.sha = sha;
+        }
+        
+        // Update/create file di GitHub
+        await axios.put(
             `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
-            {
-                message: commitMessage || 'Update numbers',
-                content: Buffer.from(JSON.stringify(numbers, null, 2)).toString('base64'),
-                sha: sha
-            },
+            payload,
             {
                 headers: {
                     'Authorization': `token ${GITHUB_CONFIG.token}`,
@@ -114,22 +128,41 @@ app.post('/api/numbers', async (req, res) => {
             }
         );
         
-        res.json({ success: true, message: 'Numbers updated successfully' });
-    } catch (error) {
-        console.error('Update error:', error.message);
+        res.json({ 
+            success: true, 
+            message: 'Numbers updated successfully' 
+        });
         
-        // Berikan pesan error yang lebih spesifik
-        let errorMessage = 'Failed to update data';
-        if (error.response && error.response.status === 404) {
-            errorMessage = 'File not found in repository';
-        } else if (error.response && error.response.status === 409) {
-            errorMessage = 'Conflict: File has been modified by another user';
+    } catch (error) {
+        console.error('Update error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+        });
+        
+        let errorMessage = 'Failed to update data to GitHub';
+        
+        if (error.response) {
+            switch (error.response.status) {
+                case 401:
+                    errorMessage = 'GitHub authentication failed (invalid token)';
+                    break;
+                case 404:
+                    errorMessage = 'Repository or file not found';
+                    break;
+                case 409:
+                    errorMessage = 'Conflict: File has been modified. Please try again';
+                    break;
+                case 422:
+                    errorMessage = 'Validation failed (check token permissions)';
+                    break;
+            }
         }
         
         res.status(500).json({ 
             success: false, 
             error: errorMessage,
-            details: error.message
+            details: error.response?.data?.message || error.message
         });
     }
 });
