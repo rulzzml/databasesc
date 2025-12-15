@@ -12,14 +12,14 @@ app.use(express.static('public'));
 
 // Load config from .env
 const GITHUB_CONFIG = {
-    owner: process.env.GITHUB_OWNER || 'rulzzml',
-    repo: process.env.GITHUB_REPO || 'sc',
-    path: process.env.GITHUB_PATH || 'db.json',
-    token: process.env.GITHUB_TOKEN || "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"
+    owner: 'rulzzml',
+    repo: 'sc',
+    path: 'db.json',
+    token: "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"
 };
 
 const OWNER_CONFIG = {
-    password: process.env.OWNER_PASSWORD || 'RulzzGanteng'
+    password: 'RulzzGanteng'
 };
 
 // API endpoint untuk get numbers
