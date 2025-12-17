@@ -3,1258 +3,1168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RulzXD Database</title>
+    <title>Database - RulzXD</title>
     <link rel="icon" href="logo.jpg">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    
     <style>
-      :root {
-  --bg-1: #0a1129;
-  --bg-2: #0f1a3d;
-  --card: rgba(30, 58, 138, 0.15);
-  --muted: #93c5fd;
-  --accent-from: #2563eb;
-  --accent-to: #3b82f6;
-  --glass-border: rgba(59, 130, 246, 0.15);
-  --text: #e0f2fe;
-  --shadow: rgba(2, 8, 30, 0.6);
-  --transition: 240ms cubic-bezier(.2,.9,.2,1);
-  --accent-secondary: #a855f7;
-  --error: #ef4444;
-  --success: #22c55e;
-}
-
-/* Reset & Base Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', system-ui, sans-serif;
-}
-
-body {
-    background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    color: var(--text);
-    scroll-behavior: smooth;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* Container */
-.container {
-    max-width: 1200px;
-    width: 100%;
-    background: var(--card);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-    padding: 30px;
-    margin-top: 20px;
-    margin-bottom: 40px;
-    transition: all 0.3s ease;
-}
-
-.container:hover {
-    border-color: rgba(59, 130, 246, 0.4);
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(37, 99, 235, 0.25);
-}
-
-/* Header */
-.header {
-    text-align: center;
-    margin-bottom: 40px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--glass-border);
-}
-
-.header h1 {
-    font-size: 3rem;
-    background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.header p {
-    color: var(--muted);
-    font-size: 1.1rem;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-/* Database Container */
-.database-container {
-    background: var(--card);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(12px);
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    margin-bottom: 30px;
-    transition: all 0.3s ease;
-}
-
-.database-container:hover {
-    border-color: rgba(59, 130, 246, 0.4);
-    box-shadow: 0 12px 32px rgba(37, 99, 235, 0.2);
-}
-
-.database-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.database-header h2 {
-    font-size: 1.8rem;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.database-header h2::before {
-    content: '📊';
-    font-size: 1.5rem;
-}
-
-.count-container {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    background: rgba(59, 130, 246, 0.1);
-    padding: 10px 20px;
-    border-radius: 50px;
-    border: 1px solid var(--glass-border);
-}
-
-#numbersCount {
-    font-weight: bold;
-    color: var(--accent-to);
-    font-size: 1.1rem;
-}
-
-#lastUpdated {
-    color: var(--muted);
-    font-size: 0.9rem;
-    font-style: italic;
-}
-
-/* Numbers Grid */
-.numbers-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    min-height: 200px;
-}
-
-.number-card {
-    background: linear-gradient(135deg, var(--accent-from) 0%, var(--accent-to) 100%);
-    color: white;
-    padding: 20px;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: all 0.3s ease;
-    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.number-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
-}
-
-.number {
-    font-size: 1.4rem;
-    font-weight: bold;
-    font-family: 'Courier New', monospace;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    word-break: break-all;
-}
-
-.date {
-    font-size: 0.85rem;
-    opacity: 0.9;
-    font-style: italic;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-/* Loading State */
-.loading-state {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    text-align: center;
-}
-
-.loading-state i {
-    font-size: 3rem;
-    color: var(--accent-to);
-    margin-bottom: 20px;
-}
-
-.loading-state p {
-    color: var(--muted);
-    font-size: 1.2rem;
-}
-
-.loading-state small {
-    color: var(--error);
-    margin-top: 10px;
-    font-size: 0.9rem;
-}
-
-/* Controls */
-.controls {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
-    margin-top: 30px;
-    padding-top: 30px;
-    border-top: 1px solid var(--glass-border);
-}
-
-/* Buttons */
-.btn {
-    padding: 14px 28px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    min-width: 160px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.btn:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-}
-
-.btn:active:not(:disabled) {
-    transform: translateY(-1px);
-}
-
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btn-primary {
-    background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
-    color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-    background: linear-gradient(90deg, #1d4ed8, #2563eb);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
-}
-
-.btn-danger {
-    background: linear-gradient(90deg, var(--error), #f87171);
-    color: white;
-}
-
-.btn-danger:hover:not(:disabled) {
-    background: linear-gradient(90deg, #dc2626, #ef4444);
-}
-
-.btn-secondary {
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid var(--glass-border);
-    color: var(--text);
-}
-
-.btn-secondary:hover:not(:disabled) {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: rgba(59, 130, 246, 0.4);
-}
-
-.btn-info {
-    background: linear-gradient(90deg, #4299e1, #3182ce);
-    color: white;
-}
-
-.btn-info:hover:not(:disabled) {
-    background: linear-gradient(90deg, #3182ce, #2c5282);
-}
-
-/* Modal */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-}
-
-.modal.show {
-    display: flex;
-    animation: fadeIn 0.3s ease;
-}
-
-.modal-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-}
-
-.modal-content {
-    background: var(--card);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(15px);
-    border-radius: 20px;
-    width: 100%;
-    max-width: 500px;
-    z-index: 1001;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
-    animation: slideUp 0.3s ease;
-    overflow: hidden;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 25px 30px;
-    background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
-    color: white;
-}
-
-.modal-header h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.modal-header button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 2rem;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background 0.3s;
-}
-
-.modal-header button:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.modal-body {
-    padding: 30px;
-    background: var(--card);
-}
-
-.modal-footer {
-    padding: 20px 30px;
-    background: rgba(15, 26, 61, 0.5);
-    border-top: 1px solid var(--glass-border);
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-}
-
-/* Form Groups */
-.form-group {
-    margin-bottom: 25px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--text);
-    font-size: 0.95rem;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 14px 18px;
-    background: rgba(59, 130, 246, 0.08);
-    border: 1px solid var(--glass-border);
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.3s;
-    color: var(--text);
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: var(--accent-from);
-    background: rgba(59, 130, 246, 0.12);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.input-group {
-    display: flex;
-    gap: 10px;
-}
-
-.input-group input {
-    flex: 1;
-}
-
-.input-group button {
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid var(--glass-border);
-    border-radius: 8px;
-    width: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    color: var(--muted);
-}
-
-.input-group button:hover {
-    background: rgba(59, 130, 246, 0.2);
-    color: var(--text);
-}
-
-/* Error Messages */
-.error-message {
-    color: var(--error);
-    font-size: 0.9rem;
-    margin-top: 10px;
-    padding: 10px 15px;
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: 8px;
-    display: none;
-}
-
-.error-message.show {
-    display: block;
-    animation: shake 0.5s;
-}
-
-/* Preview Box */
-.preview-box {
-    margin-top: 20px;
-    padding: 15px;
-    background: rgba(59, 130, 246, 0.08);
-    border-radius: 8px;
-    border: 1px solid var(--glass-border);
-    display: none;
-}
-
-.preview-box.show {
-    display: block;
-    animation: fadeIn 0.3s;
-}
-
-.preview-box small {
-    color: var(--muted);
-    font-size: 0.85rem;
-}
-
-.preview-number {
-    font-family: 'Courier New', monospace;
-    font-size: 1.2rem;
-    color: var(--success);
-    margin-top: 8px;
-    font-weight: bold;
-}
-
-/* Toast Notification */
-.toast {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 9999;
-    display: none;
-}
-
-.toast.show {
-    display: block;
-    animation: slideInRight 0.3s ease;
-}
-
-.toast-content {
-    background: var(--card);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(12px);
-    padding: 18px 25px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    border-left: 4px solid var(--success);
-    min-width: 300px;
-}
-
-.toast-content.success {
-    border-left-color: var(--success);
-    background: rgba(34, 197, 94, 0.15);
-}
-
-.toast-content.error {
-    border-left-color: var(--error);
-    background: rgba(239, 68, 68, 0.15);
-}
-
-.toast-content.warning {
-    border-left-color: #ffc107;
-    background: rgba(255, 193, 7, 0.15);
-}
-
-.toast-content.info {
-    border-left-color: #17a2b8;
-    background: rgba(23, 162, 184, 0.15);
-}
-
-.toast-content i {
-    font-size: 1.2rem;
-}
-
-.toast-content.success i { color: var(--success); }
-.toast-content.error i { color: var(--error); }
-.toast-content.warning i { color: #ffc107; }
-.toast-content.info i { color: #17a2b8; }
-
-/* Environment Status */
-.env-status {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 15px;
-    font-size: 0.9rem;
-    background: rgba(23, 162, 184, 0.15);
-    padding: 10px 15px;
-    border-radius: 8px;
-    border: 1px solid rgba(23, 162, 184, 0.3);
-    color: #e0f2fe;
-    max-width: 400px;
-    margin: 15px auto 0;
-}
-
-.env-status i {
-    color: #17a2b8;
-}
-
-/* Copyright Footer */
-.copyright {
-    text-align: center;
-    color: var(--muted);
-    padding: 20px;
-    font-size: 0.9rem;
-    margin-top: auto;
-}
-
-.copyright span {
-    font-weight: bold;
-    color: var(--text);
-}
-
-.bujug {
-    font-size: 0.8rem;
-    opacity: 0.6;
-    margin-top: 5px;
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideUp {
-    from { 
-        opacity: 0;
-        transform: translateY(50px);
-    }
-    to { 
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes slideInRight {
-    from { 
-        opacity: 0;
-        transform: translateX(100px);
-    }
-    to { 
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-    20%, 40%, 60%, 80% { transform: translateX(5px); }
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .container {
-        padding: 20px;
-        margin-top: 10px;
-    }
-    
-    .header h1 {
-        font-size: 2.2rem;
-    }
-    
-    .numbers-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
-    
-    .database-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .count-container {
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    .controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .modal-content {
-        margin: 10px;
-    }
-    
-    .toast {
-        bottom: 20px;
-        right: 20px;
-        left: 20px;
-    }
-    
-    .toast-content {
-        min-width: auto;
-    }
-}
-
-@media (max-width: 480px) {
-    .header h1 {
-        font-size: 1.8rem;
-    }
-    
-    .header p {
-        font-size: 1rem;
-    }
-    
-    .database-header h2 {
-        font-size: 1.5rem;
-    }
-    
-    .numbers-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .btn {
-        padding: 12px 20px;
-        font-size: 0.95rem;
-    }
-    
-    .modal-body {
-        padding: 20px;
-    }
-    
-    .modal-footer {
-        padding: 15px 20px;
-        flex-direction: column;
-    }
-    
-    .modal-footer .btn {
-        width: 100%;
-    }
-}
-
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-    width: 10px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--bg-1);
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(90deg, #1d4ed8, #2563eb);
-}
-
-/* Selection Color */
-::selection {
-    background: rgba(37, 99, 235, 0.3);
-    color: var(--text);
-}
-
-/* Focus Outline */
-:focus {
-    outline: 2px solid var(--accent-from);
-    outline-offset: 2px;
-}
-
-/* Disabled State */
-:disabled {
-    opacity: 0.6;
-    cursor: not-allowed !important;
-}
-
-/* Print Styles */
-@media print {
-    .controls,
-    .btn,
-    .modal,
-    .toast {
-        display: none !important;
-    }
-    
-    .container {
-        box-shadow: none;
-        background: white;
-        color: black;
-    }
-    
-    .database-container {
-        box-shadow: none;
-        border: 1px solid #ddd;
-    }
-    
-    .number-card {
-        break-inside: avoid;
-        box-shadow: none;
-        border: 1px solid #ddd;
-        color: black;
-        background: white !important;
-    }
-}
+        :root {
+            --bg-1: #0a1129;
+            --bg-2: #0f1a3d;
+            --card: rgba(30, 58, 138, 0.15);
+            --muted: #93c5fd;
+            --accent-from: #2563eb;
+            --accent-to: #3b82f6;
+            --glass-border: rgba(59, 130, 246, 0.15);
+            --text: #e0f2fe;
+            --shadow: rgba(2, 8, 30, 0.6);
+            --error: #ef4444;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.5;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: rgba(15, 26, 61, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 0 16px;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-sub {
+            font-size: 11px;
+            color: var(--muted);
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .logo-sub {
+                display: block;
+            }
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(34,197,94,0.15);
+            color: #4ade80;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4ade80;
+        }
+
+        /* BUTTONS - FIXED */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            text-decoration: none;
+            height: 44px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(59, 130, 246, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(90deg, var(--error), #f87171);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* GLASS EFFECT */
+        .glass {
+            background: var(--card);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+        }
+
+        /* FORM */
+        .form-input {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text);
+            width: 100%;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-from);
+            background: rgba(59, 130, 246, 0.15);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            padding-top: 80px;
+            padding-bottom: 40px;
+            min-height: calc(100vh - 120px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* LOGIN PAGE */
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 32px;
+        }
+
+        /* DASHBOARD */
+        .dashboard-header {
+            margin-bottom: 24px;
+        }
+
+        .dashboard-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .dashboard-subtitle {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* STATS CARD */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .stats-card {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stats-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-to);
+            margin-bottom: 4px;
+        }
+
+        .stats-label {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* NUMBERS GRID */
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .numbers-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .number-card {
+            padding: 16px;
+            border-left: 4px solid var(--accent-to);
+        }
+
+        .number-text {
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            word-break: break-all;
+            color: white;
+        }
+
+        .number-date {
+            font-size: 12px;
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+            flex-wrap: wrap;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            padding: 16px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        /* NOTIFICATION */
+        .notification-container {
+            position: fixed;
+            top: 80px;
+            right: 16px;
+            z-index: 1000;
+            max-width: 320px;
+            width: 100%;
+        }
+
+        @media (max-width: 640px) {
+            .notification-container {
+                right: 8px;
+                left: 8px;
+                max-width: calc(100vw - 16px);
+            }
+        }
+
+        .notification {
+            background: var(--card);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease;
+            font-size: 13px;
+        }
+
+        .notification.success {
+            border-left-color: #22c55e;
+            background: rgba(34, 197, 94, 0.12);
+        }
+
+        .notification.error {
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.12);
+        }
+
+        .notification.info {
+            border-left-color: var(--accent-from);
+            background: rgba(37, 99, 235, 0.12);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(120%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* LOADING */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            flex-direction: column;
+            grid-column: 1 / -1;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--accent-from);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* FOOTER */
+        .footer {
+            padding: 20px 0;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            background: rgba(15, 26, 61, 0.3);
+        }
+
+        .footer-text {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* UTILITIES */
+        .hidden {
+            display: none;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+
+        .mb-2 { margin-bottom: 8px; }
+        .mb-3 { margin-bottom: 12px; }
+        .mb-4 { margin-bottom: 16px; }
+
+        .w-full { width: 100%; }
+        .flex-1 { flex: 1; }
+
+        /* HAMBURGER MENU */
+        .hamburger {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        @media (min-width: 769px) {
+            .hamburger {
+                display: none;
+            }
+        }
+
+        .hamburger:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .hamburger span {
+            width: 20px;
+            height: 2px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 280px;
+            height: 100vh;
+            background: rgba(15, 26, 61, 0.98);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid var(--glass-border);
+            z-index: 999;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .mobile-menu.show {
+            left: 0;
+        }
+
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            display: none;
+        }
+
+        .mobile-overlay.show {
+            display: block;
+        }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>RulzXD Database</h1>
-            <p>Mengelola nomor telepon menggunakan GitHub sebagai database.</p>
-            <div id="envStatus" class="env-status">
-                <i class="fas fa-server"></i>
-                <span>Server-side configuration loaded</span>
-            </div>
-        </div>
-
-        <div class="database-container">
-            <div class="database-header">
-                <h2>Database</h2>
-                <div class="count-container">
-                    <span id="numbersCount">Loading...</span>
-                    <span id="lastUpdated"></span>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <div>
+                    <div class="logo-text">RulzXD Database</div>
+                    <span class="logo-sub">Manage phone numbers with GitHub</span>
                 </div>
+                <span class="status-badge">Online</span>
             </div>
-            <div id="numbersContainer" class="numbers-grid">
-                <div class="loading-state">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Loading database...</p>
+
+            <div class="flex items-center gap-3">
+                <button id="logoutBtn" class="btn-icon text-red-400 hidden md:flex" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </div>
             </div>
         </div>
+    </nav>
 
-        <div class="controls">
-            <button id="addBtn" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add Number
-            </button>
-            <button id="deleteBtn" class="btn btn-danger">
-                <i class="fas fa-trash"></i> Delete Number
-            </button>
-            <button id="refreshBtn" class="btn btn-secondary">
-                <i class="fas fa-sync-alt"></i> Refresh
-            </button>
+    <!-- Mobile Menu -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mb-8">
+            <div class="logo">
+                <div>
+                    <div class="logo-text">RulzXD Database</div>
+                    <span class="logo-sub">Manage phone numbers</span>
+                </div>
+            </div>
         </div>
+
+        <button id="logoutBtnMobile" class="btn w-full justify-start text-red-400">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
     </div>
 
-    <!-- Auth Modal -->
-    <div id="authModal" class="modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Owner Authentication</h3>
-                <button id="closeAuthModal">&times;</button>
+    <!-- Notifications -->
+    <div class="notification-container"></div>
+
+    <!-- Login Page -->
+    <section id="loginPage" class="login-page">
+        <div class="login-box glass">
+            <div class="text-center mb-6">
+                <i class="fas fa-database text-2xl text-blue-400 mb-3"></i>
+                <h1 class="text-xl font-bold gradient-text mb-2">Database Login</h1>
+                <p class="text-gray-400 text-sm">Enter your credentials to access the database</p>
             </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Password</label>
-                    <div class="input-group">
-                        <input type="password" id="passwordInput" placeholder="Masukkan password">
-                        <button id="togglePassword"><i class="fas fa-eye"></i></button>
+
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Enter password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login
+                </button>
+            </form>
+
+            <div id="loginError" class="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 text-sm hidden">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <span>Invalid password</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard -->
+    <section id="dashboard" class="main-content hidden">
+        <div class="container">
+            <!-- Header -->
+            <div class="glass p-6 mb-6">
+                <div class="dashboard-header">
+                    <h1 class="dashboard-title">Phone Numbers Database</h1>
+                    <p class="dashboard-subtitle">Manage your phone numbers stored on GitHub</p>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stats-card glass">
+                    <div class="stats-value" id="totalCount">0</div>
+                    <div class="stats-label">Total Numbers</div>
+                </div>
+                <div class="stats-card glass">
+                    <div class="stats-value" id="lastUpdatedTime">--:--:--</div>
+                    <div class="stats-label">Last Updated</div>
+                </div>
+                <div class="stats-card glass">
+                    <div class="stats-value" id="storageUsed">0 KB</div>
+                    <div class="stats-label">Storage Used</div>
+                </div>
+            </div>
+
+            <!-- Database Content -->
+            <div class="glass p-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                    <h2 class="text-lg font-bold text-blue-300">Phone Numbers</h2>
+                    <div class="flex gap-3">
+                        <button id="addBtn" class="btn btn-success">
+                            <i class="fas fa-plus mr-2"></i>Add Number
+                        </button>
+                        <button id="deleteBtn" class="btn btn-danger">
+                            <i class="fas fa-trash mr-2"></i>Delete
+                        </button>
                     </div>
                 </div>
-                <div id="authError" class="error-message"></div>
-            </div>
-            <div class="modal-footer">
-                <button id="confirmAuth" class="btn btn-primary">Enter</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Operation Modal -->
-    <div id="operationModal" class="modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="operationTitle">Operation</h3>
-                <button id="closeOperationModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="operationContent" class="form-group">
-                    <label>Nomor Telepon</label>
-                    <input type="text" id="phoneNumberInput" placeholder="Example: 81234567890">
-                    <div id="formattedNumberPreview" class="preview-box">
-                        <small>Will be saved :</small>
-                        <div id="formattedNumber" class="preview-number"></div>
+                <!-- Numbers List -->
+                <div id="numbersContainer" class="numbers-grid">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p class="mt-2 text-gray-400 text-sm">Loading database...</p>
                     </div>
                 </div>
-                <div id="operationError" class="error-message"></div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button id="refreshBtn" class="btn btn-secondary">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh Database
+                    </button>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button id="cancelOperation" class="btn btn-secondary">Cancel</button>
-                <button id="confirmOperation" class="btn btn-primary">Confirm</button>
+        </div>
+    </section>
+
+    <!-- Add/Edit Modal -->
+    <div id="numberModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-blue-300" id="modalTitle">Add Phone Number</h3>
+                <button id="closeModal" class="btn-icon">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
+
+            <form id="numberForm">
+                <div class="mb-4">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" id="phoneInput" class="form-input" placeholder="628123456789" required>
+                    <p class="text-xs text-gray-400 mt-1">Must start with 62 (Indonesia)</p>
+                </div>
+
+                <div id="phonePreview" class="mb-4 p-3 bg-blue-500/10 rounded-lg hidden">
+                    <p class="text-sm text-blue-300">Preview: <span id="previewNumber"></span></p>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="btn btn-primary flex-1" id="modalSubmitBtn">
+                        <i class="fas fa-check mr-2"></i>Confirm
+                    </button>
+                    <button type="button" id="cancelModal" class="btn btn-secondary flex-1">
+                        Cancel
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Status Toast -->
-    <div id="statusToast" class="toast">
-        <div id="statusContent" class="toast-content"></div>
-    </div>
-    
-    <footer class="copyright">
-        <p>&copy; <span>Rulzz OfficiaL.</span> All Rights Reserved.</p>
-        <p class="bujug">Server-side environment variables</p>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">
+                © <span id="currentYear">2025</span> RulzXD Database - All rights reserved
+            </p>
+        </div>
     </footer>
 
-<script>
-// Application State
-const state = {
-    numbers: [],
-    currentOperation: null,
-    isAuthenticated: false,
-    sessionTimeout: null,
-    password: ''
-};
+    <script>
+        // State Management
+        const state = {
+            numbers: [],
+            isAuthenticated: false,
+            currentOperation: null
+        };
 
-// DOM Elements
-const elements = {
-    numbersContainer: document.getElementById('numbersContainer'),
-    numbersCount: document.getElementById('numbersCount'),
-    lastUpdated: document.getElementById('lastUpdated'),
-    addBtn: document.getElementById('addBtn'),
-    deleteBtn: document.getElementById('deleteBtn'),
-    refreshBtn: document.getElementById('refreshBtn'),
-    authModal: document.getElementById('authModal'),
-    passwordInput: document.getElementById('passwordInput'),
-    togglePassword: document.getElementById('togglePassword'),
-    authError: document.getElementById('authError'),
-    confirmAuth: document.getElementById('confirmAuth'),
-    closeAuthModal: document.getElementById('closeAuthModal'),
-    operationModal: document.getElementById('operationModal'),
-    operationTitle: document.getElementById('operationTitle'),
-    phoneNumberInput: document.getElementById('phoneNumberInput'),
-    formattedNumberPreview: document.getElementById('formattedNumberPreview'),
-    formattedNumber: document.getElementById('formattedNumber'),
-    operationError: document.getElementById('operationError'),
-    confirmOperation: document.getElementById('confirmOperation'),
-    closeOperationModal: document.getElementById('closeOperationModal'),
-    cancelOperation: document.getElementById('cancelOperation'),
-    statusToast: document.getElementById('statusToast'),
-    statusContent: document.getElementById('statusContent')
-};
+        // Configuration
+        const APP_CONFIG = {
+            PASSWORD: "RulzzGanteng",
+            API_URL: "/api/numbers"
+        };
 
-// Initialize the application
-async function init() {
-    setupEventListeners();
-    await loadNumbers();
-}
+        // DOM Elements
+        const elements = {
+            // Navbar
+            logoutBtn: document.getElementById('logoutBtn'),
+            logoutBtnMobile: document.getElementById('logoutBtnMobile'),
+            hamburger: document.querySelector('.hamburger'),
+            mobileOverlay: document.getElementById('mobileOverlay'),
+            mobileMenu: document.getElementById('mobileMenu'),
+            
+            // Login
+            loginPage: document.getElementById('loginPage'),
+            loginForm: document.getElementById('loginForm'),
+            passwordInput: document.getElementById('password'),
+            loginError: document.getElementById('loginError'),
+            
+            // Dashboard
+            dashboard: document.getElementById('dashboard'),
+            refreshBtn: document.getElementById('refreshBtn'),
+            addBtn: document.getElementById('addBtn'),
+            deleteBtn: document.getElementById('deleteBtn'),
+            
+            // Stats
+            totalCount: document.getElementById('totalCount'),
+            lastUpdatedTime: document.getElementById('lastUpdatedTime'),
+            storageUsed: document.getElementById('storageUsed'),
+            
+            // Numbers Container
+            numbersContainer: document.getElementById('numbersContainer'),
+            
+            // Modal
+            numberModal: document.getElementById('numberModal'),
+            modalTitle: document.getElementById('modalTitle'),
+            phoneInput: document.getElementById('phoneInput'),
+            phonePreview: document.getElementById('phonePreview'),
+            previewNumber: document.getElementById('previewNumber'),
+            numberForm: document.getElementById('numberForm'),
+            modalSubmitBtn: document.getElementById('modalSubmitBtn'),
+            closeModal: document.getElementById('closeModal'),
+            cancelModal: document.getElementById('cancelModal')
+        };
 
-// Set up all event listeners
-function setupEventListeners() {
-    elements.addBtn.addEventListener('click', () => handleOperationClick('add'));
-    elements.deleteBtn.addEventListener('click', () => handleOperationClick('delete'));
-    elements.refreshBtn.addEventListener('click', refreshData);
-    
-    elements.closeAuthModal.addEventListener('click', hideAuthModal);
-    elements.confirmAuth.addEventListener('click', authenticate);
-    elements.togglePassword.addEventListener('click', () => togglePasswordVisibility(elements.passwordInput, elements.togglePassword));
-    
-    elements.closeOperationModal.addEventListener('click', hideOperationModal);
-    elements.cancelOperation.addEventListener('click', hideOperationModal);
-    elements.confirmOperation.addEventListener('click', performOperation);
-    elements.phoneNumberInput.addEventListener('input', formatPhoneNumberInput);
-    
-    // Security
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
-    document.onkeydown = function(e) {
-        if (e.key === 'F12' || 
-            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
-            (e.ctrlKey && e.key === 'U')) {
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const container = document.querySelector('.notification-container');
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const icon = type === 'success' ? 'check-circle' :
+                        type === 'error' ? 'exclamation-circle' : 'info-circle';
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${icon} mr-2 ${type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : 'text-blue-500'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        // Mobile Menu
+        function initMobileMenu() {
+            if (elements.hamburger && elements.mobileMenu && elements.mobileOverlay) {
+                elements.hamburger.addEventListener('click', () => {
+                    elements.mobileMenu.classList.add('show');
+                    elements.mobileOverlay.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                });
+
+                elements.mobileOverlay.addEventListener('click', () => {
+                    closeMobileMenu();
+                });
+
+                elements.logoutBtnMobile.addEventListener('click', () => {
+                    handleLogout();
+                    closeMobileMenu();
+                });
+            }
+        }
+
+        function closeMobileMenu() {
+            elements.mobileMenu?.classList.remove('show');
+            elements.mobileOverlay?.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Login System
+        function initLogin() {
+            const savedAuth = localStorage.getItem('db_auth');
+            if (savedAuth === 'true') {
+                state.isAuthenticated = true;
+                showDashboard();
+                loadNumbers();
+            }
+
+            if (elements.loginForm) {
+                elements.loginForm.addEventListener('submit', handleLogin);
+            }
+
+            elements.logoutBtn?.addEventListener('click', handleLogout);
+            elements.logoutBtnMobile?.addEventListener('click', handleLogout);
+        }
+
+        function handleLogin(e) {
             e.preventDefault();
-            showStatus('Action disabled for security', 'warning');
-            return false;
-        }
-    };
-}
+            const password = elements.passwordInput.value.trim();
 
-// API Functions
-async function loadNumbers() {
-    try {
-        showLoadingState();
-        
-        const response = await fetch('/api/numbers');
-        const data = await response.json();
-        
-        if (data.success) {
-            state.numbers = data.numbers;
-            renderNumbers();
-            updateLastUpdated();
-            showStatus('Database loaded successfully', 'success');
-        } else {
-            throw new Error(data.error);
-        }
-    } catch (error) {
-        console.error('Failed to load numbers:', error);
-        showErrorState(error.message);
-        showStatus(`Failed to load: ${error.message}`, 'error');
-    } finally {
-        elements.refreshBtn.classList.remove('animate-pulse');
-    }
-}
-
-async function updateNumbers(newNumbers, commitMessage) {
-    try {
-        const response = await fetch('/api/numbers', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                numbers: newNumbers,
-                commitMessage: commitMessage,
-                password: state.password
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (!data.success) {
-            throw new Error(data.error);
-        }
-        
-        return true;
-    } catch (error) {
-        console.error('Update failed:', error);
-        throw error;
-    }
-}
-
-// Rest of the JavaScript code (UI functions) tetap sama seperti sebelumnya
-// [Copy semua fungsi UI dari kode sebelumnya mulai dari handleOperationClick sampai showStatus]
-// ... (semua fungsi UI yang sama) ...
-
-function handleOperationClick(operation) {
-    state.currentOperation = operation;
-    if (state.isAuthenticated) {
-        showOperationModal(operation);
-    } else {
-        showAuthModal();
-    }
-}
-
-function showAuthModal() {
-    elements.passwordInput.value = '';
-    elements.authError.textContent = '';
-    elements.authError.classList.remove('show');
-    elements.authModal.classList.add('show');
-    elements.passwordInput.focus();
-}
-
-function hideAuthModal() {
-    elements.authModal.classList.remove('show');
-}
-
-function togglePasswordVisibility(inputElement, toggleButton) {
-    const isPassword = inputElement.type === 'password';
-    inputElement.type = isPassword ? 'text' : 'password';
-    toggleButton.innerHTML = isPassword ? 
-        '<i class="fas fa-eye-slash"></i>' : 
-        '<i class="fas fa-eye"></i>';
-}
-
-function authenticate() {
-    const password = elements.passwordInput.value.trim();
-    
-    // Simpan password untuk API calls
-    state.password = password;
-    state.isAuthenticated = true;
-    
-    startSessionTimer();
-    hideAuthModal();
-    showOperationModal(state.currentOperation);
-    showStatus('Authentication successful', 'success');
-}
-
-function showAuthError(message) {
-    elements.authError.textContent = message;
-    elements.authError.classList.add('show');
-}
-
-function startSessionTimer() {
-    clearTimeout(state.sessionTimeout);
-    state.sessionTimeout = setTimeout(() => {
-        state.isAuthenticated = false;
-        state.password = '';
-        showStatus('Session expired. Please login again.', 'warning');
-    }, 30 * 60 * 1000);
-}
-
-function showOperationModal(operation) {
-    elements.operationTitle.textContent = operation === 'add' ? 'Tambahkan Database' : 'Hapus Database';
-    elements.phoneNumberInput.value = '';
-    elements.operationError.textContent = '';
-    elements.operationError.classList.remove('show');
-    elements.formattedNumberPreview.classList.remove('show');
-    
-    if (operation === 'add') {
-        elements.confirmOperation.className = 'btn btn-primary';
-        elements.confirmOperation.innerHTML = '<i class="fas fa-plus"></i> Add';
-    } else {
-        elements.confirmOperation.className = 'btn btn-danger';
-        elements.confirmOperation.innerHTML = '<i class="fas fa-trash"></i> Delete';
-    }
-    
-    elements.operationModal.classList.add('show');
-    setTimeout(() => elements.phoneNumberInput.focus(), 100);
-}
-
-function hideOperationModal() {
-    elements.operationModal.classList.remove('show');
-}
-
-function formatPhoneNumberInput() {
-    let number = elements.phoneNumberInput.value.replace(/\D/g, '');
-    
-    if (number.length > 0 && !number.startsWith('62')) {
-        number = '62' + number;
-    }
-    
-    elements.phoneNumberInput.value = number;
-    elements.formattedNumber.textContent = number;
-    
-    if (number.length >= 10) {
-        elements.formattedNumberPreview.classList.add('show');
-    } else {
-        elements.formattedNumberPreview.classList.remove('show');
-    }
-}
-
-function validatePhoneNumber(number) {
-    if (!number) return 'Phone number is required';
-    if (!/^62\d+$/.test(number)) return 'Harus berawal 62 (Indonesia).';
-    if (number.length < 10) return 'Nomor terlalu pendek (minimal 10 nomor).';
-    return null;
-}
-
-async function performOperation() {
-    const number = elements.phoneNumberInput.value.trim();
-    const validationError = validatePhoneNumber(number);
-    
-    if (validationError) {
-        showOperationError(validationError);
-        return;
-    }
-
-    try {
-        if (state.currentOperation === 'add') {
-            if (state.numbers.includes(number)) {
-                showOperationError('This number already exists in database');
-                return;
+            if (password === APP_CONFIG.PASSWORD) {
+                state.isAuthenticated = true;
+                localStorage.setItem('db_auth', 'true');
+                showDashboard();
+                loadNumbers();
+                showNotification('Login successful!', 'success');
+            } else {
+                elements.loginError.classList.remove('hidden');
+                setTimeout(() => {
+                    elements.loginError.classList.add('hidden');
+                }, 3000);
             }
-            
-            const newNumbers = [...state.numbers, number];
-            await updateNumbers(newNumbers, `Add number ${number}`);
-            state.numbers = newNumbers;
-            showStatus(`Nomor ${number} berhasil ditambahkan`, 'success');
-        } else {
-            const index = state.numbers.indexOf(number);
-            if (index === -1) {
-                showOperationError('Nomor tidak terdaftar di database.');
-                return;
-            }
-            
-            const newNumbers = [...state.numbers];
-            newNumbers.splice(index, 1);
-            await updateNumbers(newNumbers, `Remove number ${number}`);
-            state.numbers = newNumbers;
-            showStatus(`Nomor ${number} berhasil dihapus.`, 'success');
         }
-        
-        hideOperationModal();
-        renderNumbers();
-    } catch (error) {
-        console.error('Operation failed:', error);
-        
-        // Jika error karena password salah, reset auth
-        if (error.message.includes('Invalid password')) {
+
+        function handleLogout() {
             state.isAuthenticated = false;
-            state.password = '';
-            showStatus('Authentication failed. Please login again.', 'error');
-        } else {
-            showStatus(`Failed to ${state.currentOperation} number: ${error.message}`, 'error');
+            localStorage.removeItem('db_auth');
+            showLogin();
+            closeMobileMenu();
+            showNotification('Logged out successfully', 'info');
         }
-    }
-}
 
-function showOperationError(message) {
-    elements.operationError.textContent = message;
-    elements.operationError.classList.add('show');
-    elements.phoneNumberInput.classList.add('shake');
-    setTimeout(() => elements.phoneNumberInput.classList.remove('shake'), 500);
-}
+        function showLogin() {
+            elements.loginPage.classList.remove('hidden');
+            elements.dashboard.classList.add('hidden');
+            if (elements.loginForm) elements.loginForm.reset();
+        }
 
-function renderNumbers() {
-    if (state.numbers.length === 0) {
-        elements.numbersContainer.innerHTML = `
-            <div class="loading-state">
-                <i class="fas fa-database"></i>
-                <p>Database is empty</p>
-            </div>
-        `;
-        elements.numbersCount.textContent = '0 numbers';
-        return;
-    }
+        function showDashboard() {
+            elements.loginPage.classList.add('hidden');
+            elements.dashboard.classList.remove('hidden');
+        }
 
-    elements.numbersCount.textContent = `${state.numbers.length} numbers`;
-    updateLastUpdated();
-    
-    elements.numbersContainer.innerHTML = state.numbers.map(number => `
-        <div class="number-card">
-            <div class="number">${number}</div>
-            <div class="date">${formatDate(new Date())}</div>
-        </div>
-    `).join('');
-}
+        // API Functions
+        async function loadNumbers() {
+            try {
+                showLoading();
+                
+                const response = await fetch(APP_CONFIG.API_URL);
+                const data = await response.json();
+                
+                if (data.success) {
+                    state.numbers = data.numbers || [];
+                    renderNumbers();
+                    updateStats();
+                } else {
+                    throw new Error(data.error || 'Failed to load data');
+                }
+            } catch (error) {
+                console.error('Error loading numbers:', error);
+                showError('Failed to load database: ' + error.message);
+                showNotification('Failed to load database', 'error');
+            }
+        }
 
-function showLoadingState() {
-    elements.numbersContainer.innerHTML = `
-        <div class="loading-state">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Loading database...</p>
-        </div>
-    `;
-    elements.refreshBtn.classList.add('animate-pulse');
-}
+        async function saveNumbers(commitMessage = 'Update numbers') {
+            try {
+                const response = await fetch(APP_CONFIG.API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        numbers: state.numbers,
+                        commitMessage: commitMessage,
+                        password: APP_CONFIG.PASSWORD
+                    })
+                });
 
-function showErrorState(message) {
-    elements.numbersContainer.innerHTML = `
-        <div class="loading-state">
-            <i class="fas fa-exclamation-triangle"></i>
-            <p>Failed to load data</p>
-            <small>${message}</small>
-        </div>
-    `;
-}
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to save data');
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error saving numbers:', error);
+                throw error;
+            }
+        }
 
-function updateLastUpdated() {
-    elements.lastUpdated.textContent = `Jam: ${new Date().toLocaleTimeString()}`;
-}
+        // UI Functions
+        function renderNumbers() {
+            if (!state.numbers || state.numbers.length === 0) {
+                elements.numbersContainer.innerHTML = `
+                    <div class="col-span-full text-center py-8">
+                        <i class="fas fa-database text-3xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-400">No phone numbers in database</p>
+                        <p class="text-gray-500 text-sm mt-1">Click "Add Number" to add your first number</p>
+                    </div>
+                `;
+                return;
+            }
 
-function formatDate(date) {
-    return date.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
-}
+            const numbersHTML = state.numbers.map(number => `
+                <div class="number-card glass">
+                    <div class="number-text">${formatPhoneNumber(number)}</div>
+                    <div class="number-date">Added: ${formatDate(new Date())}</div>
+                </div>
+            `).join('');
 
-function refreshData() {
-    loadNumbers();
-    elements.refreshBtn.classList.add('animate-pulse');
-}
+            elements.numbersContainer.innerHTML = numbersHTML;
+        }
 
-function showStatus(message, type = 'success') {
-    elements.statusContent.className = 'toast-content';
-    elements.statusContent.classList.add(type);
-    elements.statusContent.innerHTML = `
-        <i class="fas ${getStatusIcon(type)}"></i>
-        <span>${message}</span>
-    `;
-    
-    elements.statusToast.classList.add('show');
-    setTimeout(() => {
-        elements.statusToast.classList.remove('show');
-    }, 5000);
-}
+        function showLoading() {
+            elements.numbersContainer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p class="mt-2 text-gray-400 text-sm">Loading database...</p>
+                </div>
+            `;
+        }
 
-function getStatusIcon(type) {
-    switch (type) {
-        case 'error': return 'fa-exclamation-circle';
-        case 'warning': return 'fa-exclamation-triangle';
-        case 'info': return 'fa-info-circle';
-        default: return 'fa-check-circle';
-    }
-}
+        function showError(message) {
+            elements.numbersContainer.innerHTML = `
+                <div class="col-span-full text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-400 mb-3"></i>
+                    <p class="text-red-300">${message}</p>
+                    <button onclick="loadNumbers()" class="btn btn-secondary mt-3">
+                        <i class="fas fa-redo mr-2"></i>Try Again
+                    </button>
+                </div>
+            `;
+        }
 
-// Initialize
-document.addEventListener('DOMContentLoaded', init);
-</script>
+        function updateStats() {
+            elements.totalCount.textContent = state.numbers.length;
+            
+            const now = new Date();
+            elements.lastUpdatedTime.textContent = now.toLocaleTimeString();
+            
+            const storageKB = (JSON.stringify(state.numbers).length / 1024).toFixed(2);
+            elements.storageUsed.textContent = `${storageKB} KB`;
+        }
+
+        function formatPhoneNumber(number) {
+            const cleaned = number.replace(/\D/g, '');
+            if (cleaned.length === 0) return number;
+            
+            if (cleaned.startsWith('62')) {
+                const rest = cleaned.slice(2);
+                return `62 ${rest.slice(0, 3)} ${rest.slice(3, 7)} ${rest.slice(7)}`;
+            }
+            return number;
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function validatePhoneNumber(number) {
+            const cleaned = number.replace(/\D/g, '');
+            
+            if (!cleaned) return 'Phone number is required';
+            if (!cleaned.startsWith('62')) return 'Must start with 62 (Indonesia)';
+            if (cleaned.length < 10) return 'Number is too short (min 10 digits)';
+            if (cleaned.length > 15) return 'Number is too long (max 15 digits)';
+            
+            return null;
+        }
+
+        // Modal Functions
+        function initModal() {
+            elements.addBtn?.addEventListener('click', () => {
+                state.currentOperation = 'add';
+                showModal('Add Phone Number');
+            });
+
+            elements.deleteBtn?.addEventListener('click', () => {
+                state.currentOperation = 'delete';
+                showModal('Delete Phone Number');
+            });
+
+            elements.closeModal?.addEventListener('click', hideModal);
+            elements.cancelModal?.addEventListener('click', hideModal);
+            
+            elements.phoneInput?.addEventListener('input', (e) => {
+                const value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 10) {
+                    const formatted = formatPhoneNumber('62' + value.replace(/^62/, ''));
+                    elements.previewNumber.textContent = formatted;
+                    elements.phonePreview.classList.remove('hidden');
+                } else {
+                    elements.phonePreview.classList.add('hidden');
+                }
+            });
+
+            elements.numberForm?.addEventListener('submit', handleNumberOperation);
+            
+            // Close modal when clicking outside
+            elements.numberModal.addEventListener('click', (e) => {
+                if (e.target === elements.numberModal) {
+                    hideModal();
+                }
+            });
+        }
+
+        function showModal(title) {
+            elements.modalTitle.textContent = title;
+            elements.phoneInput.value = '';
+            elements.phonePreview.classList.add('hidden');
+            
+            if (state.currentOperation === 'delete') {
+                elements.modalSubmitBtn.innerHTML = '<i class="fas fa-trash mr-2"></i>Delete';
+                elements.modalSubmitBtn.className = 'btn btn-danger flex-1';
+            } else {
+                elements.modalSubmitBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Add Number';
+                elements.modalSubmitBtn.className = 'btn btn-success flex-1';
+            }
+            
+            elements.numberModal.classList.add('show');
+            setTimeout(() => elements.phoneInput.focus(), 100);
+        }
+
+        function hideModal() {
+            elements.numberModal.classList.remove('show');
+        }
+
+        async function handleNumberOperation(e) {
+            e.preventDefault();
+            
+            const number = elements.phoneInput.value.replace(/\D/g, '');
+            const validationError = validatePhoneNumber(number);
+            
+            if (validationError) {
+                showNotification(validationError, 'error');
+                return;
+            }
+
+            try {
+                if (state.currentOperation === 'add') {
+                    if (state.numbers.includes(number)) {
+                        showNotification('This number already exists', 'error');
+                        return;
+                    }
+                    
+                    state.numbers.push(number);
+                    await saveNumbers(`Add number: ${number}`);
+                    showNotification(`Number ${formatPhoneNumber(number)} added successfully`, 'success');
+                } else {
+                    const index = state.numbers.indexOf(number);
+                    if (index === -1) {
+                        showNotification('Number not found in database', 'error');
+                        return;
+                    }
+                    
+                    state.numbers.splice(index, 1);
+                    await saveNumbers(`Delete number: ${number}`);
+                    showNotification(`Number ${formatPhoneNumber(number)} deleted successfully`, 'success');
+                }
+                
+                hideModal();
+                renderNumbers();
+                updateStats();
+            } catch (error) {
+                console.error('Operation failed:', error);
+                showNotification('Operation failed: ' + error.message, 'error');
+            }
+        }
+
+        // Other Controls
+        function initControls() {
+            elements.refreshBtn?.addEventListener('click', () => {
+                loadNumbers();
+                showNotification('Refreshing database...', 'info');
+            });
+        }
+
+        // Initialize
+        function init() {
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            initMobileMenu();
+            initLogin();
+            initModal();
+            initControls();
+            
+            // Close mobile menu on window resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 769) {
+                    closeMobileMenu();
+                }
+            });
+        }
+
+        // Start the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
