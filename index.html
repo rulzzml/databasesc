@@ -537,7 +537,7 @@
             padding: 4px;
         }
 
-        /* HAMBURGER MENU */
+        /* HAMBURGER MENU - DIUBAH: Mengikuti dashboard.html */
         .hamburger {
             width: 44px;
             height: 44px;
@@ -549,6 +549,7 @@
             cursor: pointer;
             border-radius: 8px;
             transition: background 0.2s ease;
+            z-index: 1001;
         }
 
         @media (min-width: 769px) {
@@ -561,12 +562,24 @@
             background: rgba(59, 130, 246, 0.15);
         }
 
-        .hamburger span {
+        .hamburger .line {
             width: 20px;
             height: 2px;
             background: var(--text);
             border-radius: 2px;
             transition: all 0.3s ease;
+        }
+
+        .hamburger.active .line:nth-child(1) {
+            transform: translateY(6px) rotate(45deg);
+        }
+
+        .hamburger.active .line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active .line:nth-child(3) {
+            transform: translateY(-6px) rotate(-45deg);
         }
 
         .mobile-menu {
@@ -602,6 +615,152 @@
         .mobile-overlay.show {
             display: block;
         }
+
+        /* NAV MENU LINKS */
+        .nav-links {
+            display: none;
+        }
+
+        @media (min-width: 769px) {
+            .nav-links {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                margin-left: 30px;
+            }
+        }
+
+        .nav-link {
+            color: #93c5fd;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: white;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .nav-link.active {
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        /* DESCRIPTION SECTION - DITAMBAH */
+        .description-section {
+            background: rgba(15, 26, 61, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .description-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .description-title i {
+            font-size: 20px;
+        }
+
+        .description-text {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .description-text p {
+            margin-bottom: 10px;
+        }
+
+        .features-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 15px;
+        }
+
+        .features-list li {
+            padding: 8px 0 8px 25px;
+            position: relative;
+            color: #a5b4fc;
+        }
+
+        .features-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        /* RESPONSIVE IMPROVEMENTS */
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 12px;
+            }
+            
+            .main-content {
+                padding-top: 70px;
+                padding-bottom: 30px;
+            }
+            
+            .stats-card {
+                padding: 16px;
+            }
+            
+            .stats-value {
+                font-size: 28px;
+            }
+            
+            .dashboard-title {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .btn {
+                padding: 10px 16px;
+                font-size: 13px;
+                height: 40px;
+            }
+            
+            .logo-text {
+                font-size: 18px;
+            }
+        }
+
+        /* LAST UPDATED IMPROVEMENT */
+        .last-updated-full {
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .last-updated-time {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-to);
+        }
+
+        .last-updated-date {
+            font-size: 14px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
     </style>
 </head>
 
@@ -609,23 +768,40 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-container">
-            <div class="logo">
-                <div>
-                    <div class="logo-text">RulzXD Database</div>
-                    <span class="logo-sub">Manage phone numbers with GitHub</span>
+            <div class="flex items-center gap-4">
+                <div id="hamburger" class="hamburger">
+                    <span class="line"></span>
+                    <span class="line"></span>
+                    <span class="line"></span>
                 </div>
-                <span class="status-badge">Online</span>
+                
+                <div class="logo">
+                    <div>
+                        <div class="logo-text">RulzXD Database</div>
+                        <span class="logo-sub">Manage phone numbers with GitHub</span>
+                    </div>
+                    <span class="status-badge hidden md:flex">Online</span>
+                </div>
+            </div>
+
+            <!-- Desktop Navigation Links - DITAMBAH -->
+            <div class="nav-links">
+                <a href="/" class="nav-link">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="/dashboard" class="nav-link active">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="https://t.me/@rulzzofficial" target="_blank" class="nav-link">
+                    <i class="fab fa-telegram"></i> Support
+                </a>
             </div>
 
             <div class="flex items-center gap-3">
                 <button id="logoutBtn" class="btn-icon text-red-400 hidden md:flex" title="Logout">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
-                <div class="hamburger">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
+                <span class="status-badge md:hidden">Online</span>
             </div>
         </div>
     </nav>
@@ -634,11 +810,23 @@
     <div class="mobile-overlay" id="mobileOverlay"></div>
     <div class="mobile-menu" id="mobileMenu">
         <div class="mb-8">
-            <div class="logo">
+            <div class="logo mb-4">
                 <div>
                     <div class="logo-text">RulzXD Database</div>
                     <span class="logo-sub">Manage phone numbers</span>
                 </div>
+            </div>
+            
+            <div class="space-y-2">
+                <a href="/" class="flex items-center gap-3 text-gray-300 hover:text-white p-3 rounded-lg hover:bg-white/5 transition-colors">
+                    <i class="fas fa-home w-5"></i> Home
+                </a>
+                <a href="/dashboard" class="flex items-center gap-3 text-blue-300 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <i class="fas fa-tachometer-alt w-5"></i> Dashboard
+                </a>
+                <a href="https://t.me/@rulzzofficial" target="_blank" class="flex items-center gap-3 text-gray-300 hover:text-white p-3 rounded-lg hover:bg-white/5 transition-colors">
+                    <i class="fab fa-telegram w-5"></i> Telegram Support
+                </a>
             </div>
         </div>
 
@@ -691,6 +879,33 @@
                     <h1 class="dashboard-title">Phone Numbers Database</h1>
                     <p class="dashboard-subtitle">Manage your phone numbers stored on GitHub</p>
                 </div>
+                
+                <!-- Description Section - DITAMBAH -->
+                <div class="description-section">
+                    <h3 class="description-title">
+                        <i class="fas fa-info-circle"></i>
+                        About RulzXD Database
+                    </h3>
+                    <div class="description-text">
+                        <p><strong>RulzXD Database</strong> adalah sistem manajemen database nomor telepon yang canggih dan aman, dikembangkan oleh Rulzz OfficiaL. Platform ini dirancang untuk menyederhanakan penyimpanan, pengelolaan, dan akses data nomor telepon secara efisien.</p>
+                        
+                        <p>Dibangun dengan teknologi terkini, sistem ini menyediakan solusi penyimpanan data yang terintegrasi dengan GitHub, memastikan keamanan, ketersediaan, dan konsistensi data Anda. Setiap perubahan yang dilakukan secara otomatis tersinkronisasi dengan repositori GitHub, memberikan backup real-time dan version control.</p>
+                        
+                        <h4 class="mt-4 mb-2 text-blue-300 font-semibold">Key Features:</h4>
+                        <ul class="features-list">
+                            <li><strong>Secure Authentication:</strong> Sistem login multi-level dengan proteksi password yang aman</li>
+                            <li><strong>GitHub Integration:</strong> Penyimpanan data terpusat di cloud dengan GitHub sebagai backend</li>
+                            <li><strong>Real-time Updates:</strong> Perubahan data langsung tersinkron dengan GitHub</li>
+                            <li><strong>Date Tracking:</strong> Setiap entri dilengkapi dengan timestamp penambahan</li>
+                            <li><strong>Multi-device Access:</strong> Akses dari berbagai perangkat dengan responsif design</li>
+                            <li><strong>Advanced Search:</strong> Kemampuan pencarian dan filtering data yang cepat</li>
+                            <li><strong>Export Capabilities:</strong> Ekspor data dalam berbagai format untuk analisis</li>
+                            <li><strong>Activity Logging:</strong> Log aktivitas lengkap untuk audit dan monitoring</li>
+                        </ul>
+                        
+                        <p class="mt-4">Sistem ini ideal untuk berbagai keperluan bisnis, organisasi, maupun personal yang membutuhkan manajemen kontak yang terstruktur dan dapat diakses dari mana saja. Dengan antarmuka yang intuitif dan performa yang optimal, RulzXD Database menjadi solusi terpercaya untuk kebutuhan manajemen data telepon Anda.</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Stats -->
@@ -700,7 +915,10 @@
                     <div class="stats-label">Total Numbers</div>
                 </div>
                 <div class="stats-card glass">
-                    <div class="stats-value" id="lastUpdatedTime">--:--:--</div>
+                    <div class="last-updated-full">
+                        <div class="last-updated-time" id="lastUpdatedTime">--:--:--</div>
+                        <div class="last-updated-date" id="lastUpdatedDate">Loading date...</div>
+                    </div>
                     <div class="stats-label">Last Updated</div>
                 </div>
                 <div class="stats-card glass">
@@ -780,22 +998,33 @@
             <p class="footer-text">
                 © <span id="currentYear">2025</span> RulzXD Database - All rights reserved
             </p>
+            <div class="flex justify-center gap-6 mt-4">
+                <a href="https://github.com/RulzzOfficiaL" target="_blank" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fab fa-github text-lg"></i>
+                </a>
+                <a href="https://wa.me/6285133226206" target="_blank" class="text-gray-400 hover:text-green-400 transition-colors">
+                    <i class="fab fa-whatsapp text-lg"></i>
+                </a>
+                <a href="mailto:rulzzofficial628@gmail.com" class="text-gray-400 hover:text-red-400 transition-colors">
+                    <i class="fas fa-envelope text-lg"></i>
+                </a>
+            </div>
         </div>
     </footer>
 
     <script>
         // State Management
         const state = {
-            numbers: [], // Array of objects: { number: string, addedDate: string }
+            numbers: [],
             isAuthenticated: false,
-            currentPassword: null, // Password yang digunakan untuk session ini
+            currentPassword: null,
             currentOperation: null,
             lastUpdateTime: null
         };
 
         // Configuration
         const APP_CONFIG = {
-            API_URL: "/api", // DIUBAH: Base URL ke backend
+            API_URL: "/api",
             DATE_FORMAT: "YYYY-MM-DD"
         };
 
@@ -804,7 +1033,7 @@
             // Navbar
             logoutBtn: document.getElementById('logoutBtn'),
             logoutBtnMobile: document.getElementById('logoutBtnMobile'),
-            hamburger: document.querySelector('.hamburger'),
+            hamburger: document.getElementById('hamburger'),
             mobileOverlay: document.getElementById('mobileOverlay'),
             mobileMenu: document.getElementById('mobileMenu'),
             
@@ -824,6 +1053,7 @@
             // Stats
             totalCount: document.getElementById('totalCount'),
             lastUpdatedTime: document.getElementById('lastUpdatedTime'),
+            lastUpdatedDate: document.getElementById('lastUpdatedDate'),
             storageUsed: document.getElementById('storageUsed'),
             
             // Numbers Container
@@ -841,7 +1071,7 @@
             cancelModal: document.getElementById('cancelModal')
         };
 
-        // Notification System - DIUBAH: Hilang otomatis setelah 3 detik
+        // Notification System
         function showNotification(message, type = 'info') {
             const container = document.querySelector('.notification-container');
             
@@ -860,15 +1090,14 @@
             
             container.appendChild(notification);
 
-            // DIUBAH: Hilangkan notifikasi setelah 3 detik dengan animasi fade out
             setTimeout(() => {
                 notification.style.animation = 'fadeOut 0.5s ease forwards';
                 setTimeout(() => {
                     if (notification.parentNode) {
                         notification.remove();
                     }
-                }, 500); // Waktu untuk animasi fade out
-            }, 3000); // DIUBAH: 3 detik = 3000ms
+                }, 500);
+            }, 3000);
         }
 
         // Toggle password visibility
@@ -878,7 +1107,6 @@
                     const type = elements.passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                     elements.passwordInput.setAttribute('type', type);
                     
-                    // Toggle icon
                     const icon = elements.togglePassword.querySelector('i');
                     if (type === 'text') {
                         icon.classList.remove('fa-eye');
@@ -891,13 +1119,14 @@
             }
         }
 
-        // Mobile Menu
+        // Mobile Menu - DIUBAH: Mengikuti dashboard.html
         function initMobileMenu() {
             if (elements.hamburger && elements.mobileMenu && elements.mobileOverlay) {
                 elements.hamburger.addEventListener('click', () => {
-                    elements.mobileMenu.classList.add('show');
-                    elements.mobileOverlay.classList.add('show');
-                    document.body.style.overflow = 'hidden';
+                    elements.hamburger.classList.toggle('active');
+                    elements.mobileMenu.classList.toggle('show');
+                    elements.mobileOverlay.classList.toggle('show');
+                    document.body.style.overflow = elements.mobileMenu.classList.contains('show') ? 'hidden' : '';
                 });
 
                 elements.mobileOverlay.addEventListener('click', () => {
@@ -912,12 +1141,13 @@
         }
 
         function closeMobileMenu() {
+            elements.hamburger?.classList.remove('active');
             elements.mobileMenu?.classList.remove('show');
             elements.mobileOverlay?.classList.remove('show');
             document.body.style.overflow = '';
         }
 
-        // Login System - DIUBAH: Menggunakan backend untuk autentikasi
+        // Login System
         function initLogin() {
             const savedAuth = localStorage.getItem('db_auth');
             const savedPassword = localStorage.getItem('db_password');
@@ -936,7 +1166,6 @@
             elements.logoutBtn?.addEventListener('click', handleLogout);
             elements.logoutBtnMobile?.addEventListener('click', handleLogout);
             
-            // Initialize password toggle
             initPasswordToggle();
         }
 
@@ -950,7 +1179,6 @@
             }
 
             try {
-                // DIUBAH: Kirim permintaan login ke backend
                 const response = await fetch(`${APP_CONFIG.API_URL}/login`, {
                     method: 'POST',
                     headers: {
@@ -1000,7 +1228,6 @@
             elements.loginPage.classList.remove('hidden');
             elements.dashboard.classList.add('hidden');
             if (elements.loginForm) elements.loginForm.reset();
-            // Reset password field type
             elements.passwordInput.setAttribute('type', 'password');
             const icon = elements.togglePassword.querySelector('i');
             icon.classList.remove('fa-eye-slash');
@@ -1012,7 +1239,7 @@
             elements.dashboard.classList.remove('hidden');
         }
 
-        // API Functions - DIUBAH: Menggunakan backend endpoints
+        // API Functions
         async function loadNumbers() {
             try {
                 showLoading();
@@ -1022,9 +1249,6 @@
                     return;
                 }
                 
-                console.log('🔑 Loading with password:', state.currentPassword.substring(0, 3) + '...');
-                
-                // Menggunakan Authorization header dengan password
                 const response = await fetch(`${APP_CONFIG.API_URL}/numbers`, {
                     headers: {
                         'Authorization': `Bearer ${state.currentPassword}`
@@ -1036,13 +1260,10 @@
                 console.log('API Response:', data);
                 
                 if (data.success) {
-                    // Format data yang diterima
                     if (Array.isArray(data.numbers)) {
-                        // Jika data sudah dalam format object (dengan tanggal)
                         if (data.numbers.length > 0 && typeof data.numbers[0] === 'object' && data.numbers[0].number) {
                             state.numbers = data.numbers;
                         } else {
-                            // Jika masih array string, convert ke format object
                             state.numbers = data.numbers.map(num => ({
                                 number: num,
                                 addedDate: getCurrentDate()
@@ -1052,7 +1273,6 @@
                         state.numbers = [];
                     }
                     
-                    // Update last update time dari API response jika ada
                     if (data.lastUpdateTime) {
                         state.lastUpdateTime = new Date(data.lastUpdateTime);
                     } else {
@@ -1098,7 +1318,6 @@
                     throw new Error(data.error || 'Failed to save data');
                 }
                 
-                // Update last update time setelah save berhasil
                 state.lastUpdateTime = new Date();
                 
                 return true;
@@ -1155,10 +1374,24 @@
         function updateStats() {
             elements.totalCount.textContent = state.numbers.length;
             
+            // DIUBAH: Tambah tanggal lengkap
             if (state.lastUpdateTime) {
                 elements.lastUpdatedTime.textContent = state.lastUpdateTime.toLocaleTimeString();
+                elements.lastUpdatedDate.textContent = state.lastUpdateTime.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
             } else {
-                elements.lastUpdatedTime.textContent = new Date().toLocaleTimeString();
+                const now = new Date();
+                elements.lastUpdatedTime.textContent = now.toLocaleTimeString();
+                elements.lastUpdatedDate.textContent = now.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
             }
             
             const storageKB = (JSON.stringify(state.numbers).length / 1024).toFixed(2);
@@ -1169,17 +1402,14 @@
             const cleaned = number.replace(/\D/g, '');
             if (cleaned.length === 0) return number;
             
-            // Format untuk Indonesia (62)
             if (cleaned.startsWith('62')) {
                 const rest = cleaned.slice(2);
                 return `+62 ${rest.slice(0, 3)} ${rest.slice(3, 7)} ${rest.slice(7)}`;
             }
-            // Format untuk US/Canada (1)
             else if (cleaned.startsWith('1')) {
                 const rest = cleaned.slice(1);
                 return `+1 (${rest.slice(0, 3)}) ${rest.slice(3, 6)}-${rest.slice(6)}`;
             }
-            // Format umum untuk negara lain
             else {
                 const countryCode = cleaned.match(/^\d{1,3}/)?.[0] || '';
                 const rest = cleaned.slice(countryCode.length);
