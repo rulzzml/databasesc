@@ -908,52 +908,80 @@
 
         // API Functions
         async function loadNumbers() {
-            try {
-                showLoading();
-                
-                const response = await fetch(APP_CONFIG.API_URL);
-                const data = await response.json();
-                
-                if (data.success) {
-                    state.numbers = data.numbers || [];
-                    renderNumbers();
-                    updateStats();
-                } else {
-                    throw new Error(data.error || 'Failed to load data');
-                }
-            } catch (error) {
-                console.error('Error loading numbers:', error);
-                showError('Failed to load database: ' + error.message);
-                showNotification('Failed to load database', 'error');
-            }
+    try {
+        showLoading();
+        
+        // Get password from localStorage
+        const savedAuth = localStorage.getItem('db_auth');
+        const password = savedAuth === 'true' ? APP_CONFIG.PASSWORD : null;
+        
+        if (!password) {
+            showError('Not authenticated');
+            return;
         }
-
-        async function saveNumbers(commitMessage = 'Update numbers') {
-            try {
-                const response = await fetch(APP_CONFIG.API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        numbers: state.numbers,
-                        commitMessage: commitMessage,
-                        password: APP_CONFIG.PASSWORD
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (!data.success) {
-                    throw new Error(data.error || 'Failed to save data');
-                }
-                
-                return true;
-            } catch (error) {
-                console.error('Error saving numbers:', error);
-                throw error;
+        
+        console.log('🔑 Loading with password:', password.substring(0, 3) + '...');
+        
+        // OPTION 1: Menggunakan Authorization header
+        const response = await fetch(APP_CONFIG.API_URL, {
+            headers: {
+                'Authorization': `Bearer ${password}`
             }
+        });
+        
+        // OPTION 2: Atau pakai query parameter (jika Option 1 gagal)
+        // const response = await fetch(`${APP_CONFIG.API_URL}?password=${encodeURIComponent(password)}`);
+        
+        const data = await response.json();
+        
+        console.log('API Response:', data);
+        
+        if (data.success) {
+            state.numbers = data.numbers || [];
+            renderNumbers();
+            updateStats();
+            showNotification('Database loaded successfully', 'success');
+        } else {
+            throw new Error(data.error || 'Failed to load data');
         }
+    } catch (error) {
+        console.error('Error loading numbers:', error);
+        showError('Failed to load database: ' + error.message);
+        showNotification('Failed to load database', 'error');
+    }
+}
+
+       async function saveNumbers(commitMessage = 'Update numbers') {
+    try {
+        const password = APP_CONFIG.PASSWORD;
+        
+        const response = await fetch(APP_CONFIG.API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${password}`  // Tambahin ini
+            },
+            body: JSON.stringify({
+                numbers: state.numbers,
+                commitMessage: commitMessage,
+                password: password  // Tetap kirim di body juga
+            })
+        });
+
+        const data = await response.json();
+        
+        console.log('Save response:', data);
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to save data');
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Error saving numbers:', error);
+        throw error;
+    }
+}
 
         // UI Functions
         function renderNumbers() {

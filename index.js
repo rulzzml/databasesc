@@ -39,21 +39,36 @@ const GITHUB_CONFIG = {
     password: process.env.ADMIN_PASSWORD || 'RulzzGanteng'
 };
 
-// API endpoint untuk get numbers (WITH AUTH)
+// API endpoint untuk get numbers - PERBAIKAN AUTH
 app.get('/api/numbers', async (req, res) => {
     try {
-        // Check authorization header
-        const authHeader = req.headers.authorization;
-        const clientPassword = authHeader ? authHeader.replace('Bearer ', '') : null;
+        console.log('🔑 Received auth header:', req.headers.authorization);
         
-        // Simple auth check (password dari frontend)
+        // Check authorization header OR password from localStorage
+        const authHeader = req.headers.authorization;
+        let clientPassword = null;
+        
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            clientPassword = authHeader.substring(7); // Remove "Bearer "
+        } 
+        // Juga cek query parameter sebagai fallback
+        else if (req.query.password) {
+            clientPassword = req.query.password;
+        }
+        
+        console.log('🔑 Client password received:', clientPassword ? 'YES' : 'NO');
+        
+        // Simple auth check
         if (!clientPassword || clientPassword !== GITHUB_CONFIG.password) {
+            console.log('❌ Auth failed. Expected:', GITHUB_CONFIG.password, 'Got:', clientPassword);
             return res.status(401).json({
                 success: false,
                 error: 'Authentication required'
             });
         }
 
+        console.log('✅ Authentication successful');
+        
         // Decrypt GitHub token
         const decryptedToken = decryptToken(GITHUB_CONFIG.encryptedToken);
         
@@ -64,7 +79,7 @@ app.get('/api/numbers', async (req, res) => {
             });
         }
 
-        console.log('Fetching from GitHub...');
+        console.log('📡 Fetching from GitHub...');
         
         // Fetch data dari GitHub
         const response = await axios.get(
@@ -91,7 +106,7 @@ app.get('/api/numbers', async (req, res) => {
             });
         }
         
-        console.log(`Fetched ${numbers.length} numbers from GitHub`);
+        console.log(`✅ Fetched ${numbers.length} numbers from GitHub`);
         
         res.json({ 
             success: true, 
@@ -100,7 +115,7 @@ app.get('/api/numbers', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('GitHub API error:', error.message);
+        console.error('❌ GitHub API error:', error.message);
         
         let errorMessage = 'Failed to fetch data from GitHub';
         let statusCode = 500;
@@ -132,18 +147,24 @@ app.get('/api/numbers', async (req, res) => {
     }
 });
 
-// API endpoint untuk update numbers (WITH AUTH)
+// API endpoint untuk update numbers - PERBAIKAN AUTH
 app.post('/api/numbers', async (req, res) => {
     try {
         const { numbers, commitMessage, password } = req.body;
         
+        console.log('📝 Update request received');
+        console.log('🔑 Password from body:', password ? 'YES' : 'NO');
+        
         // Auth check dengan password dari body
         if (!password || password !== GITHUB_CONFIG.password) {
+            console.log('❌ Auth failed. Expected:', GITHUB_CONFIG.password, 'Got:', password);
             return res.status(401).json({ 
                 success: false, 
                 error: 'Invalid password' 
             });
         }
+        
+        console.log('✅ Authentication successful');
         
         // Validasi input
         if (!Array.isArray(numbers)) {
@@ -177,11 +198,13 @@ app.post('/api/numbers', async (req, res) => {
                 }
             );
             sha = getResponse.data.sha;
+            console.log('📄 Got file SHA:', sha.substring(0, 10) + '...');
         } catch (error) {
             // Jika file belum ada (404), sha akan tetap null
             if (error.response && error.response.status !== 404) {
                 throw error;
             }
+            console.log('📄 File does not exist yet, will create new');
         }
         
         // Prepare update payload
@@ -195,7 +218,7 @@ app.post('/api/numbers', async (req, res) => {
             payload.sha = sha;
         }
         
-        console.log('Updating GitHub...');
+        console.log('🔄 Updating GitHub...');
         
         // Update/create file di GitHub
         const updateResponse = await axios.put(
@@ -210,7 +233,7 @@ app.post('/api/numbers', async (req, res) => {
             }
         );
         
-        console.log('GitHub update successful');
+        console.log('✅ GitHub update successful');
         
         res.json({ 
             success: true, 
@@ -219,11 +242,12 @@ app.post('/api/numbers', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('Update error details:', error.message);
+        console.error('❌ Update error:', error.message);
         
         let errorMessage = 'Failed to update data to GitHub';
         
         if (error.response) {
+            console.error('GitHub API response:', error.response.status, error.response.data);
             switch (error.response.status) {
                 case 401:
                     errorMessage = 'GitHub authentication failed (invalid token)';
