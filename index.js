@@ -2,8 +2,8 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const crypto = require('crypto');
-const fs = require('fs').promises; // Gunakan promises version
-const fsSync = require('fs'); // Juga butuh sync untuk beberapa operasi
+const fs = require('fs').promises;
+const fsSync = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -62,23 +62,67 @@ function validatePassword(req) {
     return null;
 }
 
-// Helper: Convert string array ke format baru
+// Helper: Clean phone number - FIXED: handle non-string values
+function cleanPhoneNumber(number) {
+    if (typeof number !== 'string' && typeof number !== 'number') {
+        console.warn('⚠️ Invalid phone number type:', typeof number, number);
+        return '';
+    }
+    
+    // Convert to string if it's a number
+    const numStr = String(number);
+    
+    // Remove non-digit characters
+    return numStr.replace(/\D/g, '');
+}
+
+// Helper: Convert string array ke format baru - FIXED
 function convertToNewFormat(numbersArray, existingCache = []) {
     if (!Array.isArray(numbersArray)) {
+        console.warn('⚠️ convertToNewFormat: Input is not an array');
         return [];
     }
     
-    return numbersArray.map(number => {
-        // Cari di cache apakah nomor ini sudah punya tanggal
-        const cachedItem = existingCache.find(item => 
-            item.number.replace(/\D/g, '') === number.replace(/\D/g, '')
-        );
-        
-        return {
-            number: number,
-            addedDate: cachedItem ? cachedItem.addedDate : new Date().toISOString().split('T')[0]
-        };
-    });
+    const result = [];
+    
+    for (const number of numbersArray) {
+        try {
+            // Skip null/undefined
+            if (number == null) {
+                console.warn('⚠️ Skipping null/undefined number');
+                continue;
+            }
+            
+            const cleanNum = cleanPhoneNumber(number);
+            
+            if (!cleanNum) {
+                console.warn('⚠️ Skipping invalid number:', number);
+                continue;
+            }
+            
+            // Cari di cache apakah nomor ini sudah punya tanggal
+            let foundDate = null;
+            for (const cachedItem of existingCache) {
+                if (cachedItem && cachedItem.number) {
+                    const cachedClean = cleanPhoneNumber(cachedItem.number);
+                    if (cachedClean === cleanNum) {
+                        foundDate = cachedItem.addedDate;
+                        break;
+                    }
+                }
+            }
+            
+            result.push({
+                number: cleanNum, // Simpan dalam format bersih (angka saja)
+                addedDate: foundDate || new Date().toISOString().split('T')[0]
+            });
+        } catch (error) {
+            console.error('Error processing number:', number, error);
+        }
+    }
+    
+    console.log(`✅ Converted ${result.length} numbers from array`);
+    return result;
 }
 
 // Helper: Save cache file
@@ -108,20 +152,58 @@ async function loadCache() {
     try {
         const content = await fs.readFile('db_cache.json', 'utf8');
         const data = JSON.parse(content);
-        console.log('📂 Cache loaded:', data.numbers?.length || 0, 'items');
-        return data;
-    } catch (error) {
-        console.log('📂 Cache not found or invalid, creating new...');
+        
+        // Validasi cache data
+        if (!Array.isArray(data.numbers)) {
+            console.warn('⚠️ Cache numbers is not an array, resetting...');
+            return await createNewCache();
+        }
+        
+        // Filter invalid entries
+        const validNumbers = data.numbers.filter(item => 
+            item && 
+            typeof item === 'object' && 
+            item.number && 
+            cleanPhoneNumber(item.number)
+        );
+        
+        console.log('📂 Cache loaded:', validNumbers.length, 'valid items');
+        
         return {
-            numbers: [],
-            lastUpdateTime: new Date().toISOString(),
-            metadata: {
-                totalCount: 0,
+            numbers: validNumbers,
+            lastUpdateTime: data.lastUpdateTime || new Date().toISOString(),
+            metadata: data.metadata || {
+                totalCount: validNumbers.length,
                 updatedAt: new Date().toISOString(),
                 version: "2.0"
             }
         };
+    } catch (error) {
+        console.log('📂 Cache not found or invalid, creating new...');
+        return await createNewCache();
     }
+}
+
+// Helper: Create new cache
+async function createNewCache() {
+    const newCache = {
+        numbers: [],
+        lastUpdateTime: new Date().toISOString(),
+        metadata: {
+            totalCount: 0,
+            updatedAt: new Date().toISOString(),
+            version: "2.0"
+        }
+    };
+    
+    try {
+        await fs.writeFile('db_cache.json', JSON.stringify(newCache, null, 2));
+        console.log('📝 Created new cache file');
+    } catch (error) {
+        console.error('Error creating cache:', error.message);
+    }
+    
+    return newCache;
 }
 
 // Helper: Update cache dengan data baru
@@ -133,24 +215,44 @@ async function updateCache(newNumbers) {
         // Merge data lama dan baru
         const mergedNumbers = [...existingNumbers];
         
-        newNumbers.forEach(newItem => {
-            const existingIndex = mergedNumbers.findIndex(item => 
-                item.number.replace(/\D/g, '') === newItem.number.replace(/\D/g, '')
-            );
-            
-            if (existingIndex === -1) {
-                // Nomor baru, tambahkan
-                mergedNumbers.push({
-                    number: newItem.number,
-                    addedDate: newItem.addedDate || new Date().toISOString().split('T')[0]
-                });
-            } else {
-                // Nomor sudah ada, update jika perlu
-                if (newItem.addedDate) {
-                    mergedNumbers[existingIndex].addedDate = newItem.addedDate;
+        for (const newItem of newNumbers) {
+            try {
+                if (!newItem || !newItem.number) {
+                    console.warn('⚠️ Skipping invalid new item:', newItem);
+                    continue;
                 }
+                
+                const newClean = cleanPhoneNumber(newItem.number);
+                if (!newClean) continue;
+                
+                let foundIndex = -1;
+                for (let i = 0; i < mergedNumbers.length; i++) {
+                    const existingItem = mergedNumbers[i];
+                    if (existingItem && existingItem.number) {
+                        const existingClean = cleanPhoneNumber(existingItem.number);
+                        if (existingClean === newClean) {
+                            foundIndex = i;
+                            break;
+                        }
+                    }
+                }
+                
+                if (foundIndex === -1) {
+                    // Nomor baru, tambahkan
+                    mergedNumbers.push({
+                        number: newClean,
+                        addedDate: newItem.addedDate || new Date().toISOString().split('T')[0]
+                    });
+                } else {
+                    // Nomor sudah ada, update jika perlu
+                    if (newItem.addedDate) {
+                        mergedNumbers[foundIndex].addedDate = newItem.addedDate;
+                    }
+                }
+            } catch (error) {
+                console.error('Error merging item:', newItem, error);
             }
-        });
+        }
         
         // Simpan cache yang sudah diupdate
         return await saveCache(mergedNumbers);
@@ -160,7 +262,7 @@ async function updateCache(newNumbers) {
     }
 }
 
-// API endpoint untuk get numbers - DIUBAH: Pakai cache
+// API endpoint untuk get numbers - FIXED
 app.get('/api/numbers', async (req, res) => {
     try {
         console.log('🔑 Received auth header:', req.headers.authorization);
@@ -217,9 +319,27 @@ app.get('/api/numbers', async (req, res) => {
         
         // Decode content dari base64
         const content = Buffer.from(response.data.content, 'base64').toString('utf8');
-        const githubData = content ? JSON.parse(content) : [];
+        let githubData;
         
-        console.log('📊 Raw data from GitHub:', Array.isArray(githubData) ? `Array with ${githubData.length} items` : 'Object');
+        try {
+            githubData = content ? JSON.parse(content) : [];
+        } catch (parseError) {
+            console.error('❌ JSON parse error:', parseError.message);
+            return res.status(500).json({
+                success: false,
+                error: 'Invalid JSON format in GitHub file'
+            });
+        }
+        
+        console.log('📊 Raw data type from GitHub:', typeof githubData, Array.isArray(githubData) ? `Array with ${githubData.length} items` : 'Not an array');
+        
+        // Debug: log beberapa item pertama
+        if (Array.isArray(githubData) && githubData.length > 0) {
+            console.log('🔍 First 3 items from GitHub:', githubData.slice(0, 3).map(item => ({
+                value: item,
+                type: typeof item
+            })));
+        }
         
         // Load cache yang ada
         const cache = await loadCache();
@@ -229,9 +349,9 @@ app.get('/api/numbers', async (req, res) => {
         
         if (Array.isArray(githubData)) {
             numbers = convertToNewFormat(githubData, cache.numbers);
-        } else if (githubData && typeof githubData === 'object' && githubData.numbers) {
-            // Jika somehow sudah format object (future proof)
-            numbers = githubData.numbers;
+        } else {
+            console.warn('⚠️ GitHub data is not an array, using empty array');
+            numbers = [];
         }
         
         console.log(`✅ Processed ${numbers.length} numbers`);
@@ -268,6 +388,14 @@ app.get('/api/numbers', async (req, res) => {
                 });
             } catch (cacheError) {
                 console.log('❌ Cache also not available');
+                return res.json({
+                    success: true,
+                    numbers: [],
+                    lastUpdateTime: new Date().toISOString(),
+                    totalCount: 0,
+                    source: 'empty',
+                    warning: 'No data available'
+                });
             }
         }
         
@@ -298,13 +426,13 @@ app.get('/api/numbers', async (req, res) => {
     }
 });
 
-// API endpoint untuk update numbers
+// API endpoint untuk update numbers - FIXED
 app.post('/api/numbers', async (req, res) => {
     try {
         const { numbers, commitMessage, password } = req.body;
         
         console.log('📝 Update request received');
-        console.log('📊 Data to save:', Array.isArray(numbers) ? `Array with ${numbers.length} items` : 'Invalid format');
+        console.log('📊 Data type:', Array.isArray(numbers) ? `Array with ${numbers.length} items` : 'Invalid format');
         
         // DIUBAH: Auth check dengan multiple passwords
         if (!password || !APP_CONFIG.PASSWORDS.includes(password)) {
@@ -325,27 +453,56 @@ app.post('/api/numbers', async (req, res) => {
             });
         }
         
-        // Process numbers untuk frontend (format object)
-        const processedNumbers = numbers.map(item => {
-            // Jika format object dari frontend
-            if (typeof item === 'object' && item.number) {
-                return {
-                    number: item.number,
-                    addedDate: item.addedDate || new Date().toISOString().split('T')[0]
-                };
+        // Process numbers untuk frontend (format object) - FIXED
+        const processedNumbers = [];
+        const errors = [];
+        
+        for (const item of numbers) {
+            try {
+                // Jika format object dari frontend
+                if (typeof item === 'object' && item.number) {
+                    const cleanNum = cleanPhoneNumber(item.number);
+                    if (cleanNum) {
+                        processedNumbers.push({
+                            number: cleanNum,
+                            addedDate: item.addedDate || new Date().toISOString().split('T')[0]
+                        });
+                    } else {
+                        errors.push(`Invalid number: ${item.number}`);
+                    }
+                }
+                // Jika format string (backward compatibility)
+                else if (typeof item === 'string' || typeof item === 'number') {
+                    const cleanNum = cleanPhoneNumber(item);
+                    if (cleanNum) {
+                        processedNumbers.push({
+                            number: cleanNum,
+                            addedDate: new Date().toISOString().split('T')[0]
+                        });
+                    } else {
+                        errors.push(`Invalid number: ${item}`);
+                    }
+                }
+                // Format tidak valid
+                else {
+                    errors.push(`Invalid format: ${JSON.stringify(item)}`);
+                }
+            } catch (error) {
+                errors.push(`Error processing: ${item} - ${error.message}`);
             }
-            // Jika format string (backward compatibility)
-            else if (typeof item === 'string') {
-                return {
-                    number: item,
-                    addedDate: new Date().toISOString().split('T')[0]
-                };
-            }
-            // Format tidak valid
-            else {
-                throw new Error('Invalid number format');
-            }
-        });
+        }
+        
+        if (errors.length > 0) {
+            console.warn('⚠️ Processing errors:', errors);
+        }
+        
+        if (processedNumbers.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'No valid numbers to save',
+                errors: errors
+            });
+        }
         
         // Untuk disimpan di GitHub, kita simpan sebagai array string (format lama)
         const numbersForGitHub = processedNumbers.map(item => item.number);
@@ -419,7 +576,8 @@ app.post('/api/numbers', async (req, res) => {
             message: 'Numbers updated successfully',
             count: processedNumbers.length,
             lastUpdateTime: updatedCache ? updatedCache.lastUpdateTime : new Date().toISOString(),
-            numbers: updatedCache ? updatedCache.numbers : processedNumbers
+            numbers: updatedCache ? updatedCache.numbers : processedNumbers,
+            warnings: errors.length > 0 ? errors : undefined
         });
         
     } catch (error) {
@@ -453,7 +611,7 @@ app.post('/api/numbers', async (req, res) => {
     }
 });
 
-// Endpoint untuk update tanggal manual
+// Endpoint untuk update tanggal manual - FIXED
 app.post('/api/update-date', async (req, res) => {
     try {
         const { number, newDate, password } = req.body;
@@ -466,59 +624,66 @@ app.post('/api/update-date', async (req, res) => {
             });
         }
         
-        if (!number || !newDate) {
+        if (!number) {
             return res.status(400).json({
                 success: false,
-                error: 'Number and newDate are required'
+                error: 'Number is required'
             });
         }
 
         // Validasi format tanggal (YYYY-MM-DD)
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(newDate)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Date must be in YYYY-MM-DD format'
-            });
-        }
+        const finalDate = newDate && dateRegex.test(newDate) ? newDate : new Date().toISOString().split('T')[0];
         
         // Load cache
         const cache = await loadCache();
         const numbers = cache.numbers || [];
         
-        const cleanNumber = number.replace(/\D/g, '');
+        const cleanNumber = cleanPhoneNumber(number);
+        
+        if (!cleanNumber) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid phone number'
+            });
+        }
         
         // Cari nomor di cache
-        const index = numbers.findIndex(item => 
-            item.number.replace(/\D/g, '') === cleanNumber
-        );
+        let foundIndex = -1;
+        for (let i = 0; i < numbers.length; i++) {
+            const item = numbers[i];
+            if (item && item.number) {
+                const itemClean = cleanPhoneNumber(item.number);
+                if (itemClean === cleanNumber) {
+                    foundIndex = i;
+                    break;
+                }
+            }
+        }
 
-        if (index === -1) {
-            // Nomor tidak ditemukan di cache, mungkin belum ada
-            // Coba tambahkan dengan tanggal yang diberikan
+        if (foundIndex === -1) {
+            // Nomor tidak ditemukan di cache, tambahkan baru
             numbers.push({
-                number: number,
-                addedDate: newDate
+                number: cleanNumber,
+                addedDate: finalDate
             });
             
-            console.log('➕ Number not found in cache, added new with date:', newDate);
+            console.log('➕ Number not found in cache, added new with date:', finalDate);
         } else {
             // Update tanggal yang ada
-            const oldDate = numbers[index].addedDate || 'Unknown';
-            numbers[index].addedDate = newDate;
-            console.log('✏️ Updated date from', oldDate, 'to', newDate);
+            const oldDate = numbers[foundIndex].addedDate || 'Unknown';
+            numbers[foundIndex].addedDate = finalDate;
+            console.log('✏️ Updated date from', oldDate, 'to', finalDate);
         }
         
         // Save updated cache
         await saveCache(numbers);
         
-        // TIDAK perlu update GitHub karena GitHub hanya simpan array string tanpa tanggal
-        
         res.json({
             success: true,
             message: 'Date updated successfully',
-            number: number,
-            newDate: newDate,
+            number: cleanNumber,
+            newDate: finalDate,
             totalInCache: numbers.length
         });
         
@@ -543,7 +708,7 @@ app.get('/api/cache', async (req, res) => {
                 totalNumbers: cache.numbers.length,
                 lastUpdateTime: cache.lastUpdateTime,
                 metadata: cache.metadata,
-                numbers: cache.numbers
+                numbers: cache.numbers.slice(0, 10) // Only show first 10 for preview
             }
         });
     } catch (error) {
@@ -567,7 +732,7 @@ app.post('/api/cache/reset', async (req, res) => {
         }
         
         // Reset cache ke empty
-        await saveCache([]);
+        await createNewCache();
         
         res.json({
             success: true,
@@ -642,9 +807,13 @@ async function initializeCache() {
     try {
         await fs.access('db_cache.json');
         console.log('✅ Cache file already exists');
+        
+        // Validasi cache file
+        const cache = await loadCache();
+        console.log(`✅ Cache validated: ${cache.numbers.length} items`);
     } catch (error) {
         console.log('📝 Creating initial cache file...');
-        await saveCache([]);
+        await createNewCache();
         console.log('✅ Cache file created');
     }
 }
@@ -658,6 +827,7 @@ app.listen(PORT, async () => {
     console.log(`   - Phone number date tracking (local cache)`);
     console.log(`   - Backward compatible with existing db.json`);
     console.log(`   - Auto cache management`);
+    console.log(`   - Error handling for invalid data`);
     
     // Initialize cache
     await initializeCache();
@@ -665,8 +835,8 @@ app.listen(PORT, async () => {
     console.log(`\n📂 File structure:`);
     console.log(`   - db_cache.json (local cache with dates)`);
     console.log(`   - GitHub db.json (array of strings)`);
-    console.log(`\n🔄 Flow:`);
-    console.log(`   1. Frontend → Objects with dates`);
-    console.log(`   2. Backend → Convert & cache dates locally`);
-    console.log(`   3. GitHub → Store as array of strings`);
+    console.log(`\n🔧 Debug endpoints:`);
+    console.log(`   - GET /api/cache (view cache)`);
+    console.log(`   - POST /api/cache/reset (reset cache)`);
+    console.log(`   - GET /health (server status)`);
 });
