@@ -28,16 +28,15 @@ function decryptToken(encryptedToken) {
     }
 }
 
-// Config dengan encrypted token
-// Untuk mendapatkan encrypted token: node encode.js "ghp_yourActualGitHubToken"
 const GITHUB_CONFIG = {
-    owner: process.env.GITHUB_OWNER || 'rulzzml',
-    repo: process.env.GITHUB_REPO || 'sc',
-    path: process.env.GITHUB_PATH || 'db.json',
-    // TOKEN SUDAH DIENKRIPSI PAKE AES
+    owner: 'rulzzml',
+    repo: 'sc',
+    path: 'db.json',
     encryptedToken: 'bpWxgRy1QCZWbCViyR/JVm2YqMIjDyCCKbk45+AVRdRVNnZvOFhA1eIZ75zMykmM',
-    password: process.env.ADMIN_PASSWORD || 'RulzzGanteng'
 };
+const APP_CONFIG = {
+    PASSWORDS: ["RulzzGanteng","admin123"]
+}
 
 // API endpoint untuk get numbers - PERBAIKAN AUTH
 app.get('/api/numbers', async (req, res) => {
@@ -270,16 +269,6 @@ app.post('/api/numbers', async (req, res) => {
             details: error.response?.data?.message || error.message
         });
     }
-});
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
-        timestamp: new Date().toISOString(),
-        service: 'RulzXD Database API',
-        version: '1.0.0'
-    });
 });
 
 // Serve HTML
