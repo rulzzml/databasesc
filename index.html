@@ -381,14 +381,14 @@
             width: 100%;
         }
 
-        /* NOTIFICATION */
+        /* NOTIFICATION - REVISI: Width 100% */
         .notification-container {
             position: fixed;
             top: 70px;
             right: 16px;
             z-index: 1000;
             max-width: 320px;
-            width: 100%; /* DIUBAH: 90% bukan 100% */
+            width: 100%;
         }
 
         @media (max-width: 640px) {
@@ -396,7 +396,7 @@
                 right: 8px;
                 left: 8px;
                 max-width: calc(100vw - 16px);
-                width: 90%; /* DIUBAH: 90% bukan 100% */
+                width: 100%;
             }
         }
 
@@ -407,10 +407,10 @@
             padding: 12px 16px;
             margin-bottom: 8px;
             border-left: 4px solid;
-            margin-left: 5rem;
             animation: slideIn 0.3s ease;
             font-size: 13px;
-            max-width: 100%;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .notification.success {
@@ -436,6 +436,16 @@
             to {
                 opacity: 1;
                 transform: translateX(0);
+            }
+        }
+
+        /* Tambah animasi fade out */
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
             }
         }
 
@@ -654,7 +664,6 @@
                     <label class="form-label">Password</label>
                     <div class="password-wrapper">
                         <input type="password" id="password" class="form-input" placeholder="Enter password" required>
-                        <!-- DIUBAH: Tambah tombol mata -->
                         <button type="button" class="toggle-password" id="togglePassword">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -746,7 +755,6 @@
                 <div class="mb-4">
                     <label class="form-label">Phone Number</label>
                     <input type="text" id="phoneInput" class="form-input" placeholder="+628123456789 or 628123456789" required>
-                    <!-- DIUBAH: Hilangkan only 62 -->
                     <p class="text-xs text-gray-400 mt-1">Enter phone number with country code (e.g., +62, +1, +44)</p>
                 </div>
 
@@ -780,15 +788,15 @@
         const state = {
             numbers: [], // Array of objects: { number: string, addedDate: string }
             isAuthenticated: false,
+            currentPassword: null, // Password yang digunakan untuk session ini
             currentOperation: null,
             lastUpdateTime: null
         };
 
-        // DIUBAH: Password sekarang array untuk multiple akun
+        // Configuration
         const APP_CONFIG = {
-            PASSWORDS: ["RulzzGanteng", "admin123", "password123"], // Tambah password lain di sini
-            API_URL: "/api/numbers",
-            DATE_FORMAT: "YYYY-MM-DD" // Format tanggal yang digunakan
+            API_URL: "/api", // DIUBAH: Base URL ke backend
+            DATE_FORMAT: "YYYY-MM-DD"
         };
 
         // DOM Elements
@@ -833,7 +841,7 @@
             cancelModal: document.getElementById('cancelModal')
         };
 
-        // Notification System
+        // Notification System - DIUBAH: Hilang otomatis setelah 3 detik
         function showNotification(message, type = 'info') {
             const container = document.querySelector('.notification-container');
             
@@ -852,9 +860,15 @@
             
             container.appendChild(notification);
 
+            // DIUBAH: Hilangkan notifikasi setelah 3 detik dengan animasi fade out
             setTimeout(() => {
-                notification.remove();
-            }, 4000);
+                notification.style.animation = 'fadeOut 0.5s ease forwards';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 500); // Waktu untuk animasi fade out
+            }, 3000); // DIUBAH: 3 detik = 3000ms
         }
 
         // Toggle password visibility
@@ -903,11 +917,14 @@
             document.body.style.overflow = '';
         }
 
-        // Login System - DIUBAH: Support multiple passwords
+        // Login System - DIUBAH: Menggunakan backend untuk autentikasi
         function initLogin() {
             const savedAuth = localStorage.getItem('db_auth');
-            if (savedAuth === 'true') {
+            const savedPassword = localStorage.getItem('db_password');
+            
+            if (savedAuth === 'true' && savedPassword) {
                 state.isAuthenticated = true;
+                state.currentPassword = savedPassword;
                 showDashboard();
                 loadNumbers();
             }
@@ -923,28 +940,57 @@
             initPasswordToggle();
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const password = elements.passwordInput.value.trim();
 
-            // DIUBAH: Check against array of passwords
-            if (APP_CONFIG.PASSWORDS.includes(password)) {
-                state.isAuthenticated = true;
-                localStorage.setItem('db_auth', 'true');
-                showDashboard();
-                loadNumbers();
-                showNotification('Login successful!', 'success');
-            } else {
-                elements.loginError.classList.remove('hidden');
-                setTimeout(() => {
-                    elements.loginError.classList.add('hidden');
-                }, 3000);
+            if (!password) {
+                showLoginError('Password is required');
+                return;
             }
+
+            try {
+                // DIUBAH: Kirim permintaan login ke backend
+                const response = await fetch(`${APP_CONFIG.API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password: password })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    state.isAuthenticated = true;
+                    state.currentPassword = password;
+                    localStorage.setItem('db_auth', 'true');
+                    localStorage.setItem('db_password', password);
+                    showDashboard();
+                    loadNumbers();
+                    showNotification('Login successful!', 'success');
+                } else {
+                    showLoginError(data.error || 'Invalid password');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showLoginError('Login failed. Please try again.');
+            }
+        }
+
+        function showLoginError(message) {
+            elements.loginError.querySelector('span').textContent = message;
+            elements.loginError.classList.remove('hidden');
+            setTimeout(() => {
+                elements.loginError.classList.add('hidden');
+            }, 3000);
         }
 
         function handleLogout() {
             state.isAuthenticated = false;
+            state.currentPassword = null;
             localStorage.removeItem('db_auth');
+            localStorage.removeItem('db_password');
             showLogin();
             closeMobileMenu();
             showNotification('Logged out successfully', 'info');
@@ -966,26 +1012,22 @@
             elements.dashboard.classList.remove('hidden');
         }
 
-        // API Functions
+        // API Functions - DIUBAH: Menggunakan backend endpoints
         async function loadNumbers() {
             try {
                 showLoading();
                 
-                // Get password from localStorage
-                const savedAuth = localStorage.getItem('db_auth');
-                const password = savedAuth === 'true' ? APP_CONFIG.PASSWORDS[0] : null;
-                
-                if (!password) {
+                if (!state.currentPassword) {
                     showError('Not authenticated');
                     return;
                 }
                 
-                console.log('🔑 Loading with password:', password.substring(0, 3) + '...');
+                console.log('🔑 Loading with password:', state.currentPassword.substring(0, 3) + '...');
                 
-                // Menggunakan Authorization header
-                const response = await fetch(APP_CONFIG.API_URL, {
+                // Menggunakan Authorization header dengan password
+                const response = await fetch(`${APP_CONFIG.API_URL}/numbers`, {
                     headers: {
-                        'Authorization': `Bearer ${password}`
+                        'Authorization': `Bearer ${state.currentPassword}`
                     }
                 });
                 
@@ -994,16 +1036,16 @@
                 console.log('API Response:', data);
                 
                 if (data.success) {
-                    // DIUBAH: Format data yang diterima
+                    // Format data yang diterima
                     if (Array.isArray(data.numbers)) {
                         // Jika data sudah dalam format object (dengan tanggal)
-                        if (typeof data.numbers[0] === 'object' && data.numbers[0].number) {
+                        if (data.numbers.length > 0 && typeof data.numbers[0] === 'object' && data.numbers[0].number) {
                             state.numbers = data.numbers;
                         } else {
                             // Jika masih array string, convert ke format object
                             state.numbers = data.numbers.map(num => ({
                                 number: num,
-                                addedDate: getCurrentDate() // Default tanggal saat ini
+                                addedDate: getCurrentDate()
                             }));
                         }
                     } else {
@@ -1032,18 +1074,19 @@
 
         async function saveNumbers(commitMessage = 'Update numbers') {
             try {
-                const password = APP_CONFIG.PASSWORDS[0];
+                if (!state.currentPassword) {
+                    throw new Error('Not authenticated');
+                }
                 
-                const response = await fetch(APP_CONFIG.API_URL, {
+                const response = await fetch(`${APP_CONFIG.API_URL}/numbers`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${password}`
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        numbers: state.numbers, // DIUBAH: Kirim data object, bukan array string
+                        numbers: state.numbers,
                         commitMessage: commitMessage,
-                        password: password
+                        password: state.currentPassword
                     })
                 });
 
@@ -1081,7 +1124,6 @@
             const numbersHTML = state.numbers.map(item => `
                 <div class="number-card glass">
                     <div class="number-text">${formatPhoneNumber(item.number)}</div>
-                    <!-- DIUBAH: Gunakan tanggal dari data -->
                     <div class="number-date">Added: ${formatDisplayDate(item.addedDate)}</div>
                 </div>
             `).join('');
@@ -1113,7 +1155,6 @@
         function updateStats() {
             elements.totalCount.textContent = state.numbers.length;
             
-            // DIUBAH: Gunakan waktu dari state.lastUpdateTime, bukan waktu sekarang
             if (state.lastUpdateTime) {
                 elements.lastUpdatedTime.textContent = state.lastUpdateTime.toLocaleTimeString();
             } else {
@@ -1124,7 +1165,6 @@
             elements.storageUsed.textContent = `${storageKB} KB`;
         }
 
-        // DIUBAH: Format nomor telepon untuk berbagai negara
         function formatPhoneNumber(number) {
             const cleaned = number.replace(/\D/g, '');
             if (cleaned.length === 0) return number;
@@ -1141,17 +1181,15 @@
             }
             // Format umum untuk negara lain
             else {
-                // Cari kode negara (biasanya 1-3 digit)
                 const countryCode = cleaned.match(/^\d{1,3}/)?.[0] || '';
                 const rest = cleaned.slice(countryCode.length);
                 return `+${countryCode} ${rest}`;
             }
         }
 
-        // DIUBAH: Helper functions untuk tanggal
         function getCurrentDate() {
             const now = new Date();
-            return now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            return now.toISOString().split('T')[0];
         }
 
         function formatDisplayDate(dateString) {
@@ -1165,11 +1203,10 @@
                     year: 'numeric'
                 });
             } catch (e) {
-                return dateString; // Return as-is jika parsing gagal
+                return dateString;
             }
         }
 
-        // DIUBAH: Validasi nomor telepon untuk semua negara
         function validatePhoneNumber(number) {
             const cleaned = number.replace(/\D/g, '');
             
@@ -1208,7 +1245,6 @@
 
             elements.numberForm?.addEventListener('submit', handleNumberOperation);
             
-            // Close modal when clicking outside
             elements.numberModal.addEventListener('click', (e) => {
                 if (e.target === elements.numberModal) {
                     hideModal();
@@ -1250,22 +1286,19 @@
 
             try {
                 if (state.currentOperation === 'add') {
-                    // Check if number already exists
                     if (state.numbers.some(item => item.number === number)) {
                         showNotification('This number already exists', 'error');
                         return;
                     }
                     
-                    // DIUBAH: Tambahkan dengan tanggal
                     state.numbers.push({
                         number: number,
-                        addedDate: getCurrentDate() // Tanggal saat ditambahkan
+                        addedDate: getCurrentDate()
                     });
                     
                     await saveNumbers(`Add number: ${number}`);
                     showNotification(`Number ${formatPhoneNumber(number)} added successfully`, 'success');
                 } else {
-                    // Find index of number to delete
                     const index = state.numbers.findIndex(item => item.number === number);
                     if (index === -1) {
                         showNotification('Number not found in database', 'error');
@@ -1303,7 +1336,6 @@
             initModal();
             initControls();
             
-            // Close mobile menu on window resize
             window.addEventListener('resize', () => {
                 if (window.innerWidth >= 769) {
                     closeMobileMenu();

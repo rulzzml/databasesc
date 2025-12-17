@@ -506,6 +506,39 @@ app.post('/api/update-date', async (req, res) => {
     }
 });
 
+// API endpoint untuk login
+app.post('/api/login', (req, res) => {
+    try {
+        const { password } = req.body;
+        
+        if (!password) {
+            return res.status(400).json({
+                success: false,
+                error: 'Password is required'
+            });
+        }
+        
+        if (APP_CONFIG.PASSWORDS.includes(password)) {
+            return res.json({
+                success: true,
+                message: 'Login successful',
+                timestamp: new Date().toISOString()
+            });
+        } else {
+            return res.status(401).json({
+                success: false,
+                error: 'Invalid password'
+            });
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Login failed'
+        });
+    }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({
