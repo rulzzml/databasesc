@@ -10,31 +10,75 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static('public'));
 
-// Load config from .env (sebaiknya token disimpan di .env)
+// AES Encryption/Decryption
+const algorithm = "aes-256-cbc";
+const key = crypto.createHash("sha256").update(String("rulzzofficial")).digest();
+const iv = Buffer.alloc(16, 0);
+
+function decryptToken(encryptedToken) {
+    try {
+        const decipher = crypto.createDecipheriv(algorithm, key, iv);
+        let decrypted = decipher.update(encryptedToken, "base64", "utf8");
+        decrypted += decipher.final("utf8");
+        return decrypted;
+    } catch (error) {
+        console.error('Token decryption failed:', error.message);
+        return null;
+    }
+}
+
+// Config dengan encrypted token
+// Untuk mendapatkan encrypted token: node encode.js "ghp_yourActualGitHubToken"
 const GITHUB_CONFIG = {
     owner: process.env.GITHUB_OWNER || 'rulzzml',
     repo: process.env.GITHUB_REPO || 'sc',
     path: process.env.GITHUB_PATH || 'db.json',
-    token: process.env.GITHUB_TOKEN || "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" // HATI-HATI: JANGAN SIMPAN TOKEN DI KODE
+    // TOKEN SUDAH DIENKRIPSI PAKE AES
+    encryptedToken: process.env.ENCRYPTED_TOKEN || 'U2FsdGVkX1+9K5J7w8VjK3LmNpQwTyuioPASDFGHJKL=',
+    password: process.env.ADMIN_PASSWORD || 'RulzzGanteng'
 };
 
-const OWNER_CONFIG = {
-    password: process.env.OWNER_PASSWORD || 'RulzzGanteng'
-};
-
-// API endpoint untuk get numbers
+// API endpoint untuk get numbers (WITH AUTH)
 app.get('/api/numbers', async (req, res) => {
     try {
+        // Check authorization header
+        const authHeader = req.headers.authorization;
+        const clientPassword = authHeader ? authHeader.replace('Bearer ', '') : null;
+        
+        // Simple auth check (password dari frontend)
+        if (!clientPassword || clientPassword !== GITHUB_CONFIG.password) {
+            return res.status(401).json({
+                success: false,
+                error: 'Authentication required'
+            });
+        }
+
+        // Decrypt GitHub token
+        const decryptedToken = decryptToken(GITHUB_CONFIG.encryptedToken);
+        
+        if (!decryptedToken) {
+            return res.status(500).json({
+                success: false,
+                error: 'Token decryption failed'
+            });
+        }
+
+        console.log('Fetching from GitHub...');
+        
+        // Fetch data dari GitHub
         const response = await axios.get(
             `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
             {
                 headers: {
-                    'Authorization': `token ${GITHUB_CONFIG.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
+                    'Authorization': `token ${decryptedToken}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'User-Agent': 'Node.js-App'
+                },
+                timeout: 10000
             }
         );
         
+        // Decode content dari base64
         const content = Buffer.from(response.data.content, 'base64').toString('utf8');
         const numbers = content ? JSON.parse(content) : [];
         
@@ -46,40 +90,75 @@ app.get('/api/numbers', async (req, res) => {
             });
         }
         
-        res.json({ success: true, numbers });
+        console.log(`Fetched ${numbers.length} numbers from GitHub`);
+        
+        res.json({ 
+            success: true, 
+            numbers,
+            count: numbers.length
+        });
+        
     } catch (error) {
         console.error('GitHub API error:', error.message);
-        res.status(500).json({ 
+        
+        let errorMessage = 'Failed to fetch data from GitHub';
+        let statusCode = 500;
+        
+        if (error.response) {
+            statusCode = error.response.status;
+            
+            switch (statusCode) {
+                case 401:
+                    errorMessage = 'GitHub authentication failed (token invalid/expired)';
+                    break;
+                case 403:
+                    errorMessage = 'Rate limit exceeded or no access to repository';
+                    break;
+                case 404:
+                    errorMessage = 'Repository or file not found';
+                    break;
+                case 422:
+                    errorMessage = 'Validation failed';
+                    break;
+            }
+        }
+        
+        res.status(statusCode).json({ 
             success: false, 
-            error: 'Failed to fetch data from GitHub' 
+            error: errorMessage,
+            details: error.response?.data?.message || error.message
         });
     }
 });
 
-// API endpoint untuk update numbers
+// API endpoint untuk update numbers (WITH AUTH)
 app.post('/api/numbers', async (req, res) => {
     try {
         const { numbers, commitMessage, password } = req.body;
         
-        // Validasi input lebih ketat
-        if (!numbers || !Array.isArray(numbers)) {
+        // Auth check dengan password dari body
+        if (!password || password !== GITHUB_CONFIG.password) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Invalid password' 
+            });
+        }
+        
+        // Validasi input
+        if (!Array.isArray(numbers)) {
             return res.status(400).json({
                 success: false,
                 error: 'Numbers must be an array'
             });
         }
         
-        if (!commitMessage || typeof commitMessage !== 'string') {
-            return res.status(400).json({
-                success: false,
-                error: 'Valid commit message is required'
-            });
-        }
+        // Decrypt GitHub token
+        const decryptedToken = decryptToken(GITHUB_CONFIG.encryptedToken);
         
-        if (!password || password !== OWNER_CONFIG.password) {
-            return res.status(401).json({ 
-                success: false, 
-                error: 'Invalid password' 
+        if (!decryptedToken) {
+            return res.status(500).json({
+                success: false,
+                error: 'Token decryption failed'
             });
         }
         
@@ -91,7 +170,7 @@ app.post('/api/numbers', async (req, res) => {
                 `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
                 {
                     headers: {
-                        'Authorization': `token ${GITHUB_CONFIG.token}`,
+                        'Authorization': `token ${decryptedToken}`,
                         'Accept': 'application/vnd.github.v3+json'
                     }
                 }
@@ -100,13 +179,13 @@ app.post('/api/numbers', async (req, res) => {
         } catch (error) {
             // Jika file belum ada (404), sha akan tetap null
             if (error.response && error.response.status !== 404) {
-                throw error; // Lempar error selain 404
+                throw error;
             }
         }
         
         // Prepare update payload
         const payload = {
-            message: commitMessage,
+            message: commitMessage || 'Update numbers via API',
             content: Buffer.from(JSON.stringify(numbers, null, 2)).toString('base64')
         };
         
@@ -115,30 +194,31 @@ app.post('/api/numbers', async (req, res) => {
             payload.sha = sha;
         }
         
+        console.log('Updating GitHub...');
+        
         // Update/create file di GitHub
-        await axios.put(
+        const updateResponse = await axios.put(
             `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
             payload,
             {
                 headers: {
-                    'Authorization': `token ${GITHUB_CONFIG.token}`,
+                    'Authorization': `token ${decryptedToken}`,
                     'Accept': 'application/vnd.github.v3+json',
                     'Content-Type': 'application/json'
                 }
             }
         );
         
+        console.log('GitHub update successful');
+        
         res.json({ 
             success: true, 
-            message: 'Numbers updated successfully' 
+            message: 'Numbers updated successfully',
+            count: numbers.length
         });
         
     } catch (error) {
-        console.error('Update error details:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status
-        });
+        console.error('Update error details:', error.message);
         
         let errorMessage = 'Failed to update data to GitHub';
         
@@ -165,6 +245,16 @@ app.post('/api/numbers', async (req, res) => {
             details: error.response?.data?.message || error.message
         });
     }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        service: 'RulzXD Database API',
+        version: '1.0.0'
+    });
 });
 
 // Serve HTML
