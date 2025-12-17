@@ -2,6 +2,8 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const crypto = require('crypto');
+const fs = require('fs').promises; // Gunakan promises version
+const fsSync = require('fs'); // Juga butuh sync untuk beberapa operasi
 require('dotenv').config();
 
 const app = express();
@@ -60,35 +62,105 @@ function validatePassword(req) {
     return null;
 }
 
-// Helper: Migrate old format to new format
-function migrateToNewFormat(data) {
-    // Jika data adalah array string, convert ke format baru
-    if (Array.isArray(data) && (data.length === 0 || typeof data[0] === 'string')) {
-        console.log('🔄 Migrating old format to new format...');
-        return data.map(number => ({
-            number: number,
-            addedDate: new Date().toISOString().split('T')[0] // Default: hari ini
-        }));
+// Helper: Convert string array ke format baru
+function convertToNewFormat(numbersArray, existingCache = []) {
+    if (!Array.isArray(numbersArray)) {
+        return [];
     }
     
-    // Jika sudah format baru, return as-is
-    return data;
+    return numbersArray.map(number => {
+        // Cari di cache apakah nomor ini sudah punya tanggal
+        const cachedItem = existingCache.find(item => 
+            item.number.replace(/\D/g, '') === number.replace(/\D/g, '')
+        );
+        
+        return {
+            number: number,
+            addedDate: cachedItem ? cachedItem.addedDate : new Date().toISOString().split('T')[0]
+        };
+    });
 }
 
-// Helper: Get database structure
-function getDatabaseStructure(numbers) {
-    return {
-        numbers: numbers,
-        lastUpdateTime: new Date().toISOString(),
-        metadata: {
-            totalCount: numbers.length,
-            updatedAt: new Date().toISOString(),
-            version: "2.0"
-        }
-    };
+// Helper: Save cache file
+async function saveCache(data) {
+    try {
+        const cacheData = {
+            numbers: data,
+            lastUpdateTime: new Date().toISOString(),
+            metadata: {
+                totalCount: data.length,
+                updatedAt: new Date().toISOString(),
+                version: "2.0"
+            }
+        };
+        
+        await fs.writeFile('db_cache.json', JSON.stringify(cacheData, null, 2));
+        console.log('💾 Cache saved:', data.length, 'items');
+        return cacheData;
+    } catch (error) {
+        console.error('Error saving cache:', error.message);
+        return null;
+    }
 }
 
-// API endpoint untuk get numbers - DIUBAH: Support multiple passwords
+// Helper: Load cache file
+async function loadCache() {
+    try {
+        const content = await fs.readFile('db_cache.json', 'utf8');
+        const data = JSON.parse(content);
+        console.log('📂 Cache loaded:', data.numbers?.length || 0, 'items');
+        return data;
+    } catch (error) {
+        console.log('📂 Cache not found or invalid, creating new...');
+        return {
+            numbers: [],
+            lastUpdateTime: new Date().toISOString(),
+            metadata: {
+                totalCount: 0,
+                updatedAt: new Date().toISOString(),
+                version: "2.0"
+            }
+        };
+    }
+}
+
+// Helper: Update cache dengan data baru
+async function updateCache(newNumbers) {
+    try {
+        const cache = await loadCache();
+        const existingNumbers = cache.numbers || [];
+        
+        // Merge data lama dan baru
+        const mergedNumbers = [...existingNumbers];
+        
+        newNumbers.forEach(newItem => {
+            const existingIndex = mergedNumbers.findIndex(item => 
+                item.number.replace(/\D/g, '') === newItem.number.replace(/\D/g, '')
+            );
+            
+            if (existingIndex === -1) {
+                // Nomor baru, tambahkan
+                mergedNumbers.push({
+                    number: newItem.number,
+                    addedDate: newItem.addedDate || new Date().toISOString().split('T')[0]
+                });
+            } else {
+                // Nomor sudah ada, update jika perlu
+                if (newItem.addedDate) {
+                    mergedNumbers[existingIndex].addedDate = newItem.addedDate;
+                }
+            }
+        });
+        
+        // Simpan cache yang sudah diupdate
+        return await saveCache(mergedNumbers);
+    } catch (error) {
+        console.error('Error updating cache:', error.message);
+        return null;
+    }
+}
+
+// API endpoint untuk get numbers - DIUBAH: Pakai cache
 app.get('/api/numbers', async (req, res) => {
     try {
         console.log('🔑 Received auth header:', req.headers.authorization);
@@ -145,40 +217,59 @@ app.get('/api/numbers', async (req, res) => {
         
         // Decode content dari base64
         const content = Buffer.from(response.data.content, 'base64').toString('utf8');
-        const data = content ? JSON.parse(content) : {};
+        const githubData = content ? JSON.parse(content) : [];
         
-        // DIUBAH: Handle different data formats
+        console.log('📊 Raw data from GitHub:', Array.isArray(githubData) ? `Array with ${githubData.length} items` : 'Object');
+        
+        // Load cache yang ada
+        const cache = await loadCache();
+        
+        // Convert data GitHub ke format object dengan tanggal dari cache
         let numbers = [];
-        let lastUpdateTime = null;
         
-        // Format lama: array langsung
-        if (Array.isArray(data)) {
-            numbers = migrateToNewFormat(data);
-            lastUpdateTime = new Date().toISOString();
-        }
-        // Format baru: object dengan struktur
-        else if (data.numbers) {
-            numbers = migrateToNewFormat(data.numbers);
-            lastUpdateTime = data.lastUpdateTime || new Date().toISOString();
-        }
-        // Format kosong
-        else {
-            numbers = [];
-            lastUpdateTime = new Date().toISOString();
+        if (Array.isArray(githubData)) {
+            numbers = convertToNewFormat(githubData, cache.numbers);
+        } else if (githubData && typeof githubData === 'object' && githubData.numbers) {
+            // Jika somehow sudah format object (future proof)
+            numbers = githubData.numbers;
         }
         
-        console.log(`✅ Fetched ${numbers.length} numbers from GitHub`);
-        console.log('📊 Data format:', Array.isArray(data) ? 'Legacy array' : 'Structured object');
+        console.log(`✅ Processed ${numbers.length} numbers`);
         
+        // Update cache dengan data terbaru
+        const updatedCache = await updateCache(numbers);
+        
+        // Kembalikan data dengan tanggal
         res.json({ 
             success: true, 
-            numbers: numbers,
-            lastUpdateTime: lastUpdateTime,
-            totalCount: numbers.length
+            numbers: updatedCache ? updatedCache.numbers : numbers,
+            lastUpdateTime: updatedCache ? updatedCache.lastUpdateTime : new Date().toISOString(),
+            totalCount: numbers.length,
+            source: 'github-with-cache-dates'
         });
         
     } catch (error) {
         console.error('❌ GitHub API error:', error.message);
+        
+        // Jika file tidak ditemukan (404), coba pakai cache saja
+        if (error.response && error.response.status === 404) {
+            console.log('📄 GitHub file not found, trying cache...');
+            
+            try {
+                const cache = await loadCache();
+                
+                return res.json({
+                    success: true,
+                    numbers: cache.numbers || [],
+                    lastUpdateTime: cache.lastUpdateTime,
+                    totalCount: cache.numbers ? cache.numbers.length : 0,
+                    source: 'cache-only',
+                    warning: 'GitHub file not found, using cached data'
+                });
+            } catch (cacheError) {
+                console.log('❌ Cache also not available');
+            }
+        }
         
         let errorMessage = 'Failed to fetch data from GitHub';
         let statusCode = 500;
@@ -193,14 +284,6 @@ app.get('/api/numbers', async (req, res) => {
                 case 403:
                     errorMessage = 'Rate limit exceeded or no access to repository';
                     break;
-                case 404:
-                    // File belum ada, return empty array
-                    return res.json({
-                        success: true,
-                        numbers: [],
-                        lastUpdateTime: new Date().toISOString(),
-                        totalCount: 0
-                    });
                 case 422:
                     errorMessage = 'Validation failed';
                     break;
@@ -215,13 +298,13 @@ app.get('/api/numbers', async (req, res) => {
     }
 });
 
-// API endpoint untuk update numbers - DIUBAH: Support multiple passwords
+// API endpoint untuk update numbers
 app.post('/api/numbers', async (req, res) => {
     try {
         const { numbers, commitMessage, password } = req.body;
         
         console.log('📝 Update request received');
-        console.log('🔑 Password from body:', password ? 'YES' : 'NO');
+        console.log('📊 Data to save:', Array.isArray(numbers) ? `Array with ${numbers.length} items` : 'Invalid format');
         
         // DIUBAH: Auth check dengan multiple passwords
         if (!password || !APP_CONFIG.PASSWORDS.includes(password)) {
@@ -242,41 +325,33 @@ app.post('/api/numbers', async (req, res) => {
             });
         }
         
-        // Validasi setiap item dalam array
-        for (const item of numbers) {
-            // Jika format baru (object)
+        // Process numbers untuk frontend (format object)
+        const processedNumbers = numbers.map(item => {
+            // Jika format object dari frontend
             if (typeof item === 'object' && item.number) {
-                if (!item.number || item.number.replace(/\D/g, '').length < 8) {
-                    return res.status(400).json({
-                        success: false,
-                        error: `Invalid phone number: ${item.number}`
-                    });
-                }
-                // Pastikan ada addedDate
-                if (!item.addedDate) {
-                    item.addedDate = new Date().toISOString().split('T')[0];
-                }
+                return {
+                    number: item.number,
+                    addedDate: item.addedDate || new Date().toISOString().split('T')[0]
+                };
             }
-            // Jika format lama (string) - auto convert
+            // Jika format string (backward compatibility)
             else if (typeof item === 'string') {
-                if (item.replace(/\D/g, '').length < 8) {
-                    return res.status(400).json({
-                        success: false,
-                        error: `Invalid phone number: ${item}`
-                    });
-                }
+                return {
+                    number: item,
+                    addedDate: new Date().toISOString().split('T')[0]
+                };
             }
             // Format tidak valid
             else {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Invalid number format'
-                });
+                throw new Error('Invalid number format');
             }
-        }
+        });
         
-        // Migrasi format jika perlu
-        const migratedNumbers = migrateToNewFormat(numbers);
+        // Untuk disimpan di GitHub, kita simpan sebagai array string (format lama)
+        const numbersForGitHub = processedNumbers.map(item => item.number);
+        
+        // Update cache dengan data baru
+        const updatedCache = await updateCache(processedNumbers);
         
         // Decrypt GitHub token
         const decryptedToken = decryptToken(GITHUB_CONFIG.encryptedToken);
@@ -311,13 +386,10 @@ app.post('/api/numbers', async (req, res) => {
             console.log('📄 File does not exist yet, will create new');
         }
         
-        // DIUBAH: Simpan dengan struktur lengkap
-        const dataToSave = getDatabaseStructure(migratedNumbers);
-        
-        // Prepare update payload
+        // Prepare update payload - Simpan sebagai array string di GitHub
         const payload = {
             message: commitMessage || 'Update numbers via API',
-            content: Buffer.from(JSON.stringify(dataToSave, null, 2)).toString('base64')
+            content: Buffer.from(JSON.stringify(numbersForGitHub, null, 2)).toString('base64')
         };
         
         // Tambahkan SHA hanya jika file sudah ada
@@ -325,8 +397,7 @@ app.post('/api/numbers', async (req, res) => {
             payload.sha = sha;
         }
         
-        console.log('🔄 Updating GitHub...');
-        console.log('📊 Data structure:', dataToSave.metadata);
+        console.log('🔄 Updating GitHub with', numbersForGitHub.length, 'numbers...');
         
         // Update/create file di GitHub
         const updateResponse = await axios.put(
@@ -346,8 +417,9 @@ app.post('/api/numbers', async (req, res) => {
         res.json({ 
             success: true, 
             message: 'Numbers updated successfully',
-            count: migratedNumbers.length,
-            lastUpdateTime: dataToSave.lastUpdateTime
+            count: processedNumbers.length,
+            lastUpdateTime: updatedCache ? updatedCache.lastUpdateTime : new Date().toISOString(),
+            numbers: updatedCache ? updatedCache.numbers : processedNumbers
         });
         
     } catch (error) {
@@ -381,107 +453,7 @@ app.post('/api/numbers', async (req, res) => {
     }
 });
 
-// DIUBAH: Endpoint untuk migration manual
-app.post('/api/migrate', async (req, res) => {
-    try {
-        const { password } = req.body;
-        
-        // Auth check
-        if (!password || !APP_CONFIG.PASSWORDS.includes(password)) {
-            return res.status(401).json({ 
-                success: false, 
-                error: 'Invalid password' 
-            });
-        }
-        
-        console.log('🔄 Starting manual migration...');
-        
-        // Decrypt GitHub token
-        const decryptedToken = decryptToken(GITHUB_CONFIG.encryptedToken);
-        
-        if (!decryptedToken) {
-            return res.status(500).json({
-                success: false,
-                error: 'Token decryption failed'
-            });
-        }
-        
-        let sha = null;
-        let oldData = [];
-        
-        try {
-            // Ambil data lama
-            const getResponse = await axios.get(
-                `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
-                {
-                    headers: {
-                        'Authorization': `token ${decryptedToken}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                }
-            );
-            
-            sha = getResponse.data.sha;
-            const content = Buffer.from(getResponse.data.content, 'base64').toString('utf8');
-            oldData = content ? JSON.parse(content) : [];
-            
-            console.log('📄 Got existing file');
-        } catch (error) {
-            if (error.response && error.response.status !== 404) {
-                throw error;
-            }
-            console.log('📄 No existing file found');
-        }
-        
-        // Migrasi data
-        const migratedNumbers = migrateToNewFormat(oldData);
-        
-        // Simpan dengan format baru
-        const dataToSave = getDatabaseStructure(migratedNumbers);
-        
-        const payload = {
-            message: 'Migration to new format v2.0',
-            content: Buffer.from(JSON.stringify(dataToSave, null, 2)).toString('base64')
-        };
-        
-        if (sha) {
-            payload.sha = sha;
-        }
-        
-        // Update di GitHub
-        await axios.put(
-            `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
-            payload,
-            {
-                headers: {
-                    'Authorization': `token ${decryptedToken}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-        
-        console.log('✅ Migration successful');
-        
-        res.json({
-            success: true,
-            message: 'Migration completed',
-            oldCount: Array.isArray(oldData) ? oldData.length : (oldData.numbers ? oldData.numbers.length : 0),
-            newCount: migratedNumbers.length,
-            version: '2.0'
-        });
-        
-    } catch (error) {
-        console.error('❌ Migration error:', error.message);
-        res.status(500).json({
-            success: false,
-            error: 'Migration failed',
-            details: error.message
-        });
-    }
-});
-
-// DIUBAH: Endpoint untuk edit tanggal
+// Endpoint untuk update tanggal manual
 app.post('/api/update-date', async (req, res) => {
     try {
         const { number, newDate, password } = req.body;
@@ -510,98 +482,44 @@ app.post('/api/update-date', async (req, res) => {
             });
         }
         
-        // Decrypt GitHub token
-        const decryptedToken = decryptToken(GITHUB_CONFIG.encryptedToken);
+        // Load cache
+        const cache = await loadCache();
+        const numbers = cache.numbers || [];
         
-        if (!decryptedToken) {
-            return res.status(500).json({
-                success: false,
-                error: 'Token decryption failed'
-            });
-        }
-        
-        let sha = null;
-        let data = { numbers: [] };
-        
-        try {
-            // Ambil data yang ada
-            const getResponse = await axios.get(
-                `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
-                {
-                    headers: {
-                        'Authorization': `token ${decryptedToken}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                }
-            );
-            
-            sha = getResponse.data.sha;
-            const content = Buffer.from(getResponse.data.content, 'base64').toString('utf8');
-            data = content ? JSON.parse(content) : { numbers: [] };
-            
-            console.log('📄 Got existing file for date update');
-        } catch (error) {
-            if (error.response && error.response.status !== 404) {
-                throw error;
-            }
-            console.log('📄 No existing file found');
-        }
-        
-        // Migrasi format jika perlu
-        let numbers = migrateToNewFormat(data.numbers || data);
         const cleanNumber = number.replace(/\D/g, '');
         
-        // Cari nomor yang akan diupdate
+        // Cari nomor di cache
         const index = numbers.findIndex(item => 
             item.number.replace(/\D/g, '') === cleanNumber
         );
 
         if (index === -1) {
-            return res.status(404).json({
-                success: false,
-                error: 'Number not found'
+            // Nomor tidak ditemukan di cache, mungkin belum ada
+            // Coba tambahkan dengan tanggal yang diberikan
+            numbers.push({
+                number: number,
+                addedDate: newDate
             });
-        }
-
-        // Simpan tanggal lama
-        const oldDate = numbers[index].addedDate || 'Unknown';
-        
-        // Update tanggal
-        numbers[index].addedDate = newDate;
-        
-        // Update struktur data
-        const dataToSave = getDatabaseStructure(numbers);
-        
-        const payload = {
-            message: `Update date for number: ${cleanNumber} from ${oldDate} to ${newDate}`,
-            content: Buffer.from(JSON.stringify(dataToSave, null, 2)).toString('base64')
-        };
-        
-        if (sha) {
-            payload.sha = sha;
+            
+            console.log('➕ Number not found in cache, added new with date:', newDate);
+        } else {
+            // Update tanggal yang ada
+            const oldDate = numbers[index].addedDate || 'Unknown';
+            numbers[index].addedDate = newDate;
+            console.log('✏️ Updated date from', oldDate, 'to', newDate);
         }
         
-        // Update di GitHub
-        await axios.put(
-            `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
-            payload,
-            {
-                headers: {
-                    'Authorization': `token ${decryptedToken}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
+        // Save updated cache
+        await saveCache(numbers);
         
-        console.log('✅ Date update successful');
+        // TIDAK perlu update GitHub karena GitHub hanya simpan array string tanpa tanggal
         
         res.json({
             success: true,
             message: 'Date updated successfully',
-            number: numbers[index].number,
-            oldDate: oldDate,
-            newDate: newDate
+            number: number,
+            newDate: newDate,
+            totalInCache: numbers.length
         });
         
     } catch (error) {
@@ -614,24 +532,95 @@ app.post('/api/update-date', async (req, res) => {
     }
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'OK',
-        timestamp: new Date().toISOString(),
-        version: '2.0',
-        features: {
-            multiPassword: true,
-            dateTracking: true,
-            formatMigration: true,
-            encryptedToken: true
-        },
-        config: {
-            validPasswords: APP_CONFIG.PASSWORDS.length,
-            owner: GITHUB_CONFIG.owner,
-            repo: GITHUB_CONFIG.repo
+// Endpoint untuk view cache (debug purpose)
+app.get('/api/cache', async (req, res) => {
+    try {
+        const cache = await loadCache();
+        
+        res.json({
+            success: true,
+            cache: {
+                totalNumbers: cache.numbers.length,
+                lastUpdateTime: cache.lastUpdateTime,
+                metadata: cache.metadata,
+                numbers: cache.numbers
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'Failed to load cache'
+        });
+    }
+});
+
+// Endpoint untuk reset cache (debug purpose)
+app.post('/api/cache/reset', async (req, res) => {
+    try {
+        const { password } = req.body;
+        
+        if (!password || !APP_CONFIG.PASSWORDS.includes(password)) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Invalid password' 
+            });
         }
-    });
+        
+        // Reset cache ke empty
+        await saveCache([]);
+        
+        res.json({
+            success: true,
+            message: 'Cache reset successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'Failed to reset cache'
+        });
+    }
+});
+
+// Health check endpoint
+app.get('/health', async (req, res) => {
+    try {
+        const cache = await loadCache();
+        
+        res.json({
+            status: 'OK',
+            timestamp: new Date().toISOString(),
+            version: '2.0',
+            cache: {
+                totalNumbers: cache.numbers.length,
+                lastUpdate: cache.lastUpdateTime
+            },
+            features: {
+                multiPassword: true,
+                dateTracking: true,
+                localCache: true,
+                backwardCompatible: true,
+                encryptedToken: true
+            },
+            config: {
+                validPasswords: APP_CONFIG.PASSWORDS.length,
+                owner: GITHUB_CONFIG.owner,
+                repo: GITHUB_CONFIG.repo,
+                githubFormat: 'Array of strings',
+                frontendFormat: 'Array of objects with dates'
+            }
+        });
+    } catch (error) {
+        res.json({
+            status: 'OK',
+            timestamp: new Date().toISOString(),
+            error: 'Cache load failed',
+            features: {
+                multiPassword: true,
+                dateTracking: false,
+                localCache: false
+            }
+        });
+    }
 });
 
 // Serve HTML
@@ -648,15 +637,36 @@ app.use((req, res) => {
     res.status(404).send('Page not found');
 });
 
-app.listen(PORT, () => {
+// Initialize cache file jika belum ada
+async function initializeCache() {
+    try {
+        await fs.access('db_cache.json');
+        console.log('✅ Cache file already exists');
+    } catch (error) {
+        console.log('📝 Creating initial cache file...');
+        await saveCache([]);
+        console.log('✅ Cache file created');
+    }
+}
+
+app.listen(PORT, async () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📁 GitHub: ${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}`);
     console.log(`🔑 Valid passwords: ${APP_CONFIG.PASSWORDS.join(', ')}`);
     console.log(`✨ Features:`);
     console.log(`   - Multiple password support (${APP_CONFIG.PASSWORDS.length} passwords)`);
-    console.log(`   - Phone number date tracking`);
-    console.log(`   - Auto format migration`);
-    console.log(`   - Last update time tracking`);
-    console.log(`   - International phone number support`);
-    console.log(`   - Encrypted GitHub token`);
+    console.log(`   - Phone number date tracking (local cache)`);
+    console.log(`   - Backward compatible with existing db.json`);
+    console.log(`   - Auto cache management`);
+    
+    // Initialize cache
+    await initializeCache();
+    
+    console.log(`\n📂 File structure:`);
+    console.log(`   - db_cache.json (local cache with dates)`);
+    console.log(`   - GitHub db.json (array of strings)`);
+    console.log(`\n🔄 Flow:`);
+    console.log(`   1. Frontend → Objects with dates`);
+    console.log(`   2. Backend → Convert & cache dates locally`);
+    console.log(`   3. GitHub → Store as array of strings`);
 });
