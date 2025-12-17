@@ -35,7 +35,7 @@ const GITHUB_CONFIG = {
     repo: process.env.GITHUB_REPO || 'sc',
     path: process.env.GITHUB_PATH || 'db.json',
     // TOKEN SUDAH DIENKRIPSI PAKE AES
-    encryptedToken: process.env.ENCRYPTED_TOKEN || 'U2FsdGVkX1+9K5J7w8VjK3LmNpQwTyuioPASDFGHJKL=',
+    encryptedToken: process.env.ENCRYPTED_TOKEN || 'eCT+LVIWO+XL8zJrkrFFkj20guSQsJ+suJFHuovHg5T2AooWYZzNGZUX5ZcTp/ec',
     password: process.env.ADMIN_PASSWORD || 'RulzzGanteng'
 };
 
