@@ -11,20 +11,6 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static('public'));
 
-// Serve HTML
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.get('/newsletter', (req, res) => {
-    res.sendFile(path.join(__dirname, 'newsletter.html'));
-});
-
-// Handle 404
-app.use((req, res) => {
-    res.status(404).send('Page not found');
-});
-
 // AES Encryption/Decryption
 const algorithm = "aes-256-cbc";
 const key = crypto.createHash("sha256").update(String("rulzzofficial")).digest();
@@ -871,6 +857,20 @@ app.get('/health', (req, res) => {
             newsletterFile: GITHUB_CONFIG.newsletter.path
         }
     });
+});
+
+// Serve HTML
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/newsletter', (req, res) => {
+    res.sendFile(path.join(__dirname, 'newsletter.html'));
+});
+
+// Handle 404
+app.use((req, res) => {
+    res.status(404).send('Page not found');
 });
 
 app.listen(PORT, () => {
