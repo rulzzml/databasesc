@@ -10,7 +10,6 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(express.static('public'));
-app.use('/assets', express.static('assets'))
 
 // Serve HTML
 app.get('/', (req, res) => {
@@ -19,22 +18,6 @@ app.get('/', (req, res) => {
 
 app.get('/newsletter', (req, res) => {
     res.sendFile(path.join(__dirname, 'newsletter.html'));
-});
-
-app.get('/index.css', (req, res) => {
-  res.sendFile(path.join(__dirname, "index.css"));
-});
-
-app.get('/index.js', (req, res) => {
-  res.sendFile(path.join(__dirname, "indexnya.js"));
-});
-
-app.get('/assets/newsletter.css', (req, res) => {
-  res.sendFile(path.join(__dirname, "assets", "newsletter.css"));
-});
-
-app.get('/assets/newsletter.js', (req, res) => {
-  res.sendFile(path.join(__dirname, "assets", "newsletter.js"));
 });
 
 // Handle 404

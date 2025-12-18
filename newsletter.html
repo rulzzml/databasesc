@@ -10,7 +10,765 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <link href="/assets/newsletter.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --bg-1: #0a1129;
+            --bg-2: #0f1a3d;
+            --card: rgba(30, 58, 138, 0.15);
+            --muted: #93c5fd;
+            --accent-from: #2563eb;
+            --accent-to: #3b82f6;
+            --glass-border: rgba(59, 130, 246, 0.15);
+            --text: #e0f2fe;
+            --shadow: rgba(2, 8, 30, 0.6);
+            --error: #ef4444;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.5;
+        }
+
+        /* NAVBAR - SAMA DENGAN INDEX.HTML */
+        .navbar {
+            background: rgba(15, 26, 61, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 0 16px;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 800 !important;
+            background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-sub {
+            font-size: 11px;
+            color: var(--muted);
+            display: none;
+            font-weight: 400;
+        }
+
+        @media (min-width: 768px) {
+            .logo-sub {
+                display: block;
+            }
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(34,197,94,0.15);
+            color: #4ade80;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4ade80;
+        }
+
+        /* Nav Menu Links - SAMA DENGAN INDEX.HTML */
+        .nav-links {
+            display: none;
+        }
+
+        @media (min-width: 769px) {
+            .nav-links {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                margin-left: 30px;
+            }
+        }
+
+        .nav-link {
+            color: #93c5fd;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: white;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .nav-link.active {
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.15);
+            font-weight: 700;
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            text-decoration: none;
+            height: 44px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(59, 130, 246, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(90deg, var(--error), #f87171);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* GLASS EFFECT */
+        .glass {
+            background: var(--card);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+        }
+
+        /* FORM */
+        .form-input {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text);
+            width: 100%;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-from);
+            background: rgba(59, 130, 246, 0.15);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            padding-top: 80px;
+            padding-bottom: 40px;
+            min-height: calc(100vh - 120px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* LOGIN PAGE */
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            margin-top: 7rem;
+            gap: 40px;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 32px;
+        }
+
+        /* About Section di bawah login */
+        .about-section {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* DASHBOARD */
+        .dashboard-header {
+            margin-bottom: 24px;
+        }
+
+        .dashboard-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .dashboard-subtitle {
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* STATS CARD */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .stats-card {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stats-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-to);
+            margin-bottom: 4px;
+        }
+
+        .stats-label {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* LAST UPDATED FULL */
+        .last-updated-full {
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .last-updated-time {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-to);
+            margin-top: 0;
+        }
+
+        .last-updated-date {
+            font-size: 14px;
+            color: var(--muted);
+            margin-top: 2px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        /* ITEMS GRID */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .item-card {
+            padding: 16px;
+            border-left: 4px solid var(--accent-to);
+        }
+
+        .item-text {
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            word-break: break-all;
+            color: white;
+        }
+
+        .item-date {
+            font-size: 12px;
+            color: var(--muted);
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+            flex-wrap: wrap;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            padding: 16px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        /* NOTIFICATION */
+        .notification-container {
+            position: fixed;
+            top: 70px;
+            right: 16px;
+            z-index: 9999;
+            max-width: 320px;
+            width: 100%;
+        }
+
+        @media (max-width: 640px) {
+            .notification-container {
+                top: 80px;
+                right: 8px;
+                left: 8px;
+                max-width: calc(100vw - 16px);
+                width: 100%;
+            }
+        }
+
+        .notification {
+            background: var(--card);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease;
+            font-size: 13px;
+            width: 100%;
+            box-sizing: border-box;
+            font-weight: 500;
+        }
+
+        .notification.success {
+            border-left-color: #22c55e;
+            background: rgba(34, 197, 94, 0.12);
+        }
+
+        .notification.error {
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.12);
+        }
+
+        .notification.info {
+            border-left-color: var(--accent-from);
+            background: rgba(37, 99, 235, 0.12);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(120%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        /* LOADING */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            flex-direction: column;
+            grid-column: 1 / -1;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--accent-from);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* FOOTER */
+        .footer {
+            padding: 20px 0;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            background: rgba(15, 26, 61, 0.3);
+        }
+
+        .footer-text {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* UTILITIES */
+        .hidden {
+            display: none;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .mt-2 { margin-top: 2.5rem; }
+
+        .mb-2 { margin-bottom: 8px; }
+        .mb-3 { margin-bottom: 12px; }
+        .mb-4 { margin-bottom: 16px; }
+
+        .w-full { width: 100%; }
+        .flex-1 { flex: 1; }
+
+        /* PASSWORD INPUT WRAPPER */
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        /* HAMBURGER MENU - SAMA DENGAN INDEX.HTML */
+        .hamburger {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+            z-index: 1001;
+        }
+
+        @media (min-width: 769px) {
+            .hamburger {
+                display: none;
+            }
+        }
+
+        .hamburger:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .hamburger .line {
+            width: 20px;
+            height: 2px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger.active .line:nth-child(1) {
+            transform: translateY(6px) rotate(45deg);
+        }
+
+        .hamburger.active .line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active .line:nth-child(3) {
+            transform: translateY(-6px) rotate(-45deg);
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 280px;
+            height: 100vh;
+            background: rgba(15, 26, 61, 0.98);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid var(--glass-border);
+            z-index: 999;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .mobile-menu.show {
+            left: 0;
+        }
+
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            display: none;
+        }
+
+        .mobile-overlay.show {
+            display: block;
+        }
+
+        /* DESCRIPTION SECTION - SAMA DENGAN INDEX.HTML */
+        .description-section {
+            background: rgba(15, 26, 61, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--glass-border);
+            margin-top: 20px;
+        }
+
+        .description-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .description-title i {
+            font-size: 22px;
+        }
+
+        .description-text {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .description-text p {
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .features-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .features-list li {
+            padding: 8px 0 8px 25px;
+            position: relative;
+            color: #a5b4fc;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .features-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        /* Font weights */
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+        }
+
+        p, span, div:not(.logo-text):not(.stats-value):not(.last-updated-time) {
+            font-weight: 500;
+        }
+
+        .modal-title {
+            font-weight: 700 !important;
+        }
+
+        .form-label {
+            font-weight: 600 !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -277,6 +1035,586 @@
         </div>
     </footer>
     
-    <script src="/assets/newsletter.js"></script>
+    <script>
+        // State Management
+        const state = {
+            items: [],
+            isAuthenticated: false,
+            currentPassword: null,
+            currentOperation: null,
+            lastUpdateTime: null
+        };
+
+        // Configuration
+        const APP_CONFIG = {
+            API_URL: "/api",
+            DATE_FORMAT: "YYYY-MM-DD"
+        };
+
+        // DOM Elements
+        const elements = {
+            // Navbar
+            logoutBtn: document.getElementById('logoutBtn'),
+            logoutBtnMobile: document.getElementById('logoutBtnMobile'),
+            hamburger: document.getElementById('hamburger'),
+            mobileOverlay: document.getElementById('mobileOverlay'),
+            mobileMenu: document.getElementById('mobileMenu'),
+            
+            // Login
+            loginPage: document.getElementById('loginPage'),
+            loginForm: document.getElementById('loginForm'),
+            passwordInput: document.getElementById('password'),
+            togglePassword: document.getElementById('togglePassword'),
+            loginError: document.getElementById('loginError'),
+            
+            // Dashboard
+            dashboard: document.getElementById('dashboard'),
+            refreshBtn: document.getElementById('refreshBtn'),
+            addBtn: document.getElementById('addBtn'),
+            deleteBtn: document.getElementById('deleteBtn'),
+            
+            // Stats
+            totalCount: document.getElementById('totalCount'),
+            lastUpdatedTime: document.getElementById('lastUpdatedTime'),
+            lastUpdatedDate: document.getElementById('lastUpdatedDate'),
+            storageUsed: document.getElementById('storageUsed'),
+            
+            // Items Container
+            itemsContainer: document.getElementById('itemsContainer'),
+            
+            // Modal
+            itemModal: document.getElementById('itemModal'),
+            modalTitle: document.getElementById('modalTitle'),
+            itemInput: document.getElementById('itemInput'),
+            itemPreview: document.getElementById('itemPreview'),
+            previewItem: document.getElementById('previewItem'),
+            validationStatus: document.getElementById('validationStatus'),
+            itemForm: document.getElementById('itemForm'),
+            modalSubmitBtn: document.getElementById('modalSubmitBtn'),
+            closeModal: document.getElementById('closeModal'),
+            cancelModal: document.getElementById('cancelModal')
+        };
+
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const container = document.querySelector('.notification-container');
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const icon = type === 'success' ? 'check-circle' :
+                        type === 'error' ? 'exclamation-circle' : 'info-circle';
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${icon} mr-2 ${type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : 'text-blue-500'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.5s ease forwards';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 500);
+            }, 3000);
+        }
+
+        // Toggle password visibility
+        function initPasswordToggle() {
+            if (elements.togglePassword && elements.passwordInput) {
+                elements.togglePassword.addEventListener('click', () => {
+                    const type = elements.passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    elements.passwordInput.setAttribute('type', type);
+                    
+                    const icon = elements.togglePassword.querySelector('i');
+                    if (type === 'text') {
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            }
+        }
+
+        // Mobile Menu
+        function initMobileMenu() {
+            if (elements.hamburger && elements.mobileMenu && elements.mobileOverlay) {
+                elements.hamburger.addEventListener('click', () => {
+                    elements.hamburger.classList.toggle('active');
+                    elements.mobileMenu.classList.toggle('show');
+                    elements.mobileOverlay.classList.toggle('show');
+                    document.body.style.overflow = elements.mobileMenu.classList.contains('show') ? 'hidden' : '';
+                });
+
+                elements.mobileOverlay.addEventListener('click', () => {
+                    closeMobileMenu();
+                });
+
+                elements.logoutBtnMobile.addEventListener('click', () => {
+                    handleLogout();
+                    closeMobileMenu();
+                });
+            }
+        }
+
+        function closeMobileMenu() {
+            elements.hamburger?.classList.remove('active');
+            elements.mobileMenu?.classList.remove('show');
+            elements.mobileOverlay?.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Login System
+        function initLogin() {
+            const savedAuth = localStorage.getItem('newsletter_auth');
+            const savedPassword = localStorage.getItem('newsletter_password');
+            
+            if (savedAuth === 'true' && savedPassword) {
+                state.isAuthenticated = true;
+                state.currentPassword = savedPassword;
+                showDashboard();
+                loadItems();
+            }
+
+            if (elements.loginForm) {
+                elements.loginForm.addEventListener('submit', handleLogin);
+            }
+
+            elements.logoutBtn?.addEventListener('click', handleLogout);
+            elements.logoutBtnMobile?.addEventListener('click', handleLogout);
+            
+            initPasswordToggle();
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const password = elements.passwordInput.value.trim();
+
+            if (!password) {
+                showLoginError('Password is required');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${APP_CONFIG.API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password: password })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    state.isAuthenticated = true;
+                    state.currentPassword = password;
+                    localStorage.setItem('newsletter_auth', 'true');
+                    localStorage.setItem('newsletter_password', password);
+                    showDashboard();
+                    loadItems();
+                    showNotification('Login successful!', 'success');
+                } else {
+                    showLoginError(data.error || 'Invalid password');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showLoginError('Login failed. Please try again.');
+            }
+        }
+
+        function showLoginError(message) {
+            elements.loginError.querySelector('span').textContent = message;
+            elements.loginError.classList.remove('hidden');
+            setTimeout(() => {
+                elements.loginError.classList.add('hidden');
+            }, 3000);
+        }
+
+        function handleLogout() {
+            state.isAuthenticated = false;
+            state.currentPassword = null;
+            localStorage.removeItem('newsletter_auth');
+            localStorage.removeItem('newsletter_password');
+            showLogin();
+            closeMobileMenu();
+            showNotification('Logged out successfully', 'info');
+        }
+
+        function showLogin() {
+            elements.loginPage.classList.remove('hidden');
+            elements.dashboard.classList.add('hidden');
+            if (elements.loginForm) elements.loginForm.reset();
+            elements.passwordInput.setAttribute('type', 'password');
+            const icon = elements.togglePassword.querySelector('i');
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+
+        function showDashboard() {
+            elements.loginPage.classList.add('hidden');
+            elements.dashboard.classList.remove('hidden');
+        }
+
+        // API Functions
+        async function loadItems() {
+            try {
+                showLoading();
+                
+                if (!state.currentPassword) {
+                    showError('Not authenticated');
+                    return;
+                }
+                
+                const response = await fetch(`${APP_CONFIG.API_URL}/newsletter`, {
+                    headers: {
+                        'Authorization': `Bearer ${state.currentPassword}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                console.log('API Response:', data);
+                
+                if (data.success) {
+                    if (Array.isArray(data.items)) {
+                        state.items = data.items;
+                    } else {
+                        state.items = [];
+                    }
+                    
+                    // AMBIL lastUpdateTime DARI GITHUB
+                    if (data.lastUpdate) {
+                        state.lastUpdateTime = new Date(data.lastUpdate);
+                    } else if (data.lastUpdateTime) {
+                        state.lastUpdateTime = new Date(data.lastUpdateTime);
+                    } else {
+                        state.lastUpdateTime = new Date();
+                    }
+                    
+                    renderItems();
+                    updateStats();
+                    showNotification('Database loaded successfully', 'success');
+                } else {
+                    throw new Error(data.error || 'Failed to load data');
+                }
+            } catch (error) {
+                console.error('Error loading items:', error);
+                showError('Failed to load database: ' + error.message);
+                showNotification('Failed to load database', 'error');
+            }
+        }
+
+        async function saveItems(commitMessage = 'Update newsletter') {
+            try {
+                if (!state.currentPassword) {
+                    throw new Error('Not authenticated');
+                }
+                
+                const response = await fetch(`${APP_CONFIG.API_URL}/newsletter`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        items: state.items,
+                        commitMessage: commitMessage,
+                        password: state.currentPassword
+                    })
+                });
+
+                const data = await response.json();
+                
+                console.log('Save response:', data);
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to save data');
+                }
+                
+                // UPDATE lastUpdateTime SETELAH SAVE
+                state.lastUpdateTime = new Date();
+                
+                return true;
+            } catch (error) {
+                console.error('Error saving items:', error);
+                throw error;
+            }
+        }
+
+        // UI Functions
+        function renderItems() {
+            if (!state.items || state.items.length === 0) {
+                elements.itemsContainer.innerHTML = `
+                    <div class="col-span-full text-center py-8">
+                        <i class="fas fa-newspaper text-3xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-400">No newsletter IDs in database</p>
+                        <p class="text-gray-500 text-sm mt-1">Click "Add Item" to add your first newsletter ID</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const itemsHTML = state.items.map(item => `
+                <div class="item-card glass">
+                    <div class="item-text">${item.id}</div>
+                    <div class="item-date">Added: ${formatDisplayDate(item.addedDate)}</div>
+                </div>
+            `).join('');
+
+            elements.itemsContainer.innerHTML = itemsHTML;
+        }
+
+        function showLoading() {
+            elements.itemsContainer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p class="mt-2 text-gray-400 text-sm">Loading database...</p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            elements.itemsContainer.innerHTML = `
+                <div class="col-span-full text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-400 mb-3"></i>
+                    <p class="text-red-300">${message}</p>
+                    <button onclick="loadItems()" class="btn btn-secondary mt-3">
+                        <i class="fas fa-redo mr-2"></i>Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        function updateStats() {
+            elements.totalCount.textContent = state.items.length;
+            
+            // GUNAKAN lastUpdateTime DARI STATE (YANG DIAMBIL DARI GITHUB)
+            if (state.lastUpdateTime) {
+                elements.lastUpdatedTime.textContent = state.lastUpdateTime.toLocaleTimeString();
+                
+                const options = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                };
+                elements.lastUpdatedDate.textContent = state.lastUpdateTime.toLocaleDateString('id-ID', options);
+            } else {
+                const now = new Date();
+                elements.lastUpdatedTime.textContent = now.toLocaleTimeString();
+                
+                const options = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                };
+                elements.lastUpdatedDate.textContent = now.toLocaleDateString('id-ID', options);
+            }
+            
+            const storageKB = (JSON.stringify(state.items).length / 1024).toFixed(2);
+            elements.storageUsed.textContent = `${storageKB} KB`;
+        }
+
+        function formatDisplayDate(dateString) {
+            if (!dateString) return 'Unknown date';
+            
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            } catch (e) {
+                return dateString;
+            }
+        }
+
+        // VALIDASI NEWSLETTER ID - HARUS DI AKHIRI DENGAN @newsletter
+        function validateNewsletterId(itemId) {
+            if (!itemId) return 'Newsletter ID is required';
+            
+            // Cek harus diakhiri dengan @newsletter
+            if (!itemId.endsWith('@newsletter')) {
+                return 'Newsletter ID must end with @newsletter';
+            }
+            
+            // Hapus @newsletter untuk cek bagian angka
+            const numericPart = itemId.replace('@newsletter', '');
+            
+            // Cek harus hanya angka sebelum @newsletter
+            if (!/^\d+$/.test(numericPart)) {
+                return 'Newsletter ID must contain only numbers before @newsletter';
+            }
+            
+            // Cek panjang minimal
+            if (numericPart.length < 5) {
+                return 'Newsletter ID is too short (min 5 numbers before @newsletter)';
+            }
+            
+            // Cek panjang maksimal
+            if (numericPart.length > 50) {
+                return 'Newsletter ID is too long (max 50 numbers before @newsletter)';
+            }
+            
+            return null; // Valid
+        }
+
+        // Modal Functions
+        function initModal() {
+            elements.addBtn?.addEventListener('click', () => {
+                state.currentOperation = 'add';
+                showModal('Add Newsletter ID');
+            });
+
+            elements.deleteBtn?.addEventListener('click', () => {
+                state.currentOperation = 'delete';
+                showModal('Delete Newsletter ID');
+            });
+
+            elements.closeModal?.addEventListener('click', hideModal);
+            elements.cancelModal?.addEventListener('click', hideModal);
+            
+            // VALIDASI REAL-TIME SAAT INPUT
+            elements.itemInput?.addEventListener('input', (e) => {
+                const value = e.target.value.trim();
+                if (value.length >= 5) {
+                    elements.previewItem.textContent = value;
+                    elements.itemPreview.classList.remove('hidden');
+                    
+                    // Tampilkan status validasi
+                    const validationError = validateNewsletterId(value);
+                    if (validationError) {
+                        elements.validationStatus.textContent = `❌ ${validationError}`;
+                        elements.validationStatus.className = 'text-xs text-red-400 mt-1';
+                    } else {
+                        elements.validationStatus.textContent = '✅ Format newsletter ID valid';
+                        elements.validationStatus.className = 'text-xs text-green-400 mt-1';
+                    }
+                } else {
+                    elements.itemPreview.classList.add('hidden');
+                }
+            });
+
+            elements.itemForm?.addEventListener('submit', handleItemOperation);
+            
+            elements.itemModal.addEventListener('click', (e) => {
+                if (e.target === elements.itemModal) {
+                    hideModal();
+                }
+            });
+        }
+
+        function showModal(title) {
+            elements.modalTitle.textContent = title;
+            elements.itemInput.value = '';
+            elements.itemPreview.classList.add('hidden');
+            elements.validationStatus.textContent = '';
+            
+            if (state.currentOperation === 'delete') {
+                elements.modalSubmitBtn.innerHTML = '<i class="fas fa-trash mr-2"></i>Delete';
+                elements.modalSubmitBtn.className = 'btn btn-danger flex-1';
+            } else {
+                elements.modalSubmitBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Add Item';
+                elements.modalSubmitBtn.className = 'btn btn-success flex-1';
+            }
+            
+            elements.itemModal.classList.add('show');
+            setTimeout(() => elements.itemInput.focus(), 100);
+        }
+
+        function hideModal() {
+            elements.itemModal.classList.remove('show');
+        }
+
+        async function handleItemOperation(e) {
+            e.preventDefault();
+            
+            const itemId = elements.itemInput.value.trim();
+            const validationError = validateNewsletterId(itemId);
+            
+            if (validationError) {
+                showNotification(validationError, 'error');
+                return;
+            }
+
+            try {
+                if (state.currentOperation === 'add') {
+                    // Check if item already exists
+                    if (state.items.some(item => item.id === itemId)) {
+                        showNotification('This newsletter ID already exists', 'error');
+                        return;
+                    }
+                    
+                    // Add new item with current date
+                    state.items.push({
+                        id: itemId,
+                        addedDate: getCurrentDate()
+                    });
+                    
+                    await saveItems(`Add newsletter: ${itemId}`);
+                    showNotification(`Newsletter ID ${itemId} added successfully`, 'success');
+                } else {
+                    // Find index of item to delete
+                    const index = state.items.findIndex(item => item.id === itemId);
+                    if (index === -1) {
+                        showNotification('Newsletter ID not found in database', 'error');
+                        return;
+                    }
+                    
+                    state.items.splice(index, 1);
+                    await saveItems(`Delete newsletter: ${itemId}`);
+                    showNotification(`Newsletter ID ${itemId} deleted successfully`, 'success');
+                }
+                
+                hideModal();
+                renderItems();
+                updateStats();
+            } catch (error) {
+                console.error('Operation failed:', error);
+                showNotification('Operation failed: ' + error.message, 'error');
+            }
+        }
+
+        function getCurrentDate() {
+            const now = new Date();
+            return now.toISOString().split('T')[0];
+        }
+
+        // Other Controls
+        function initControls() {
+            elements.refreshBtn?.addEventListener('click', () => {
+                loadItems();
+                showNotification('Refreshing database...', 'info');
+            });
+        }
+
+        // Initialize
+        function init() {
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            initMobileMenu();
+            initLogin();
+            initModal();
+            initControls();
+            
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 769) {
+                    closeMobileMenu();
+                }
+            });
+        }
+
+        // Start the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
