@@ -21,6 +21,22 @@ app.get('/newsletter', (req, res) => {
     res.sendFile(path.join(__dirname, 'newsletter.html'));
 });
 
+app.get('/assets/index.css', (req, res) => {
+  res.sendFile(path.join(__dirname, "assets", "index.css"));
+});
+
+app.get('/assets/index.js', (req, res) => {
+  res.sendFile(path.join(__dirname, "assets", "index.js"));
+});
+
+app.get('/assets/newsletter.css', (req, res) => {
+  res.sendFile(path.join(__dirname, "assets", "newsletter.css"));
+});
+
+app.get('/assets/newsletter.js', (req, res) => {
+  res.sendFile(path.join(__dirname, "assets", "newsletter.js"));
+});
+
 // Handle 404
 app.use((req, res) => {
     res.status(404).send('Page not found');
