@@ -26,7 +26,7 @@ app.get('/index.css', (req, res) => {
 });
 
 app.get('/index.js', (req, res) => {
-  res.sendFile(path.join(__dirname, "index.js"));
+  res.sendFile(path.join(__dirname, "indexnya.js"));
 });
 
 app.get('/assets/newsletter.css', (req, res) => {
