@@ -28,11 +28,20 @@ function decryptToken(encryptedToken) {
     }
 }
 
+// GitHub Configuration untuk kedua database
 const GITHUB_CONFIG = {
-    owner: 'rulzzml',
-    repo: 'sc',
-    path: 'db.json',
-    encryptedToken: 'bpWxgRy1QCZWbCViyR/JVm2YqMIjDyCCKbk45+AVRdRVNnZvOFhA1eIZ75zMykmM',
+    phone: {
+        owner: 'rulzzml',
+        repo: 'sc',
+        path: 'db.json',
+        encryptedToken: 'bpWxgRy1QCZWbCViyR/JVm2YqMIjDyCCKbk45+AVRdRVNnZvOFhA1eIZ75zMykmM',
+    },
+    newsletter: {
+        owner: 'rulzzml',
+        repo: 'sc',
+        path: 'news.json',
+        encryptedToken: 'bpWxgRy1QCZWbCViyR/JVm2YqMIjDyCCKbk45+AVRdRVNnZvOFhA1eIZ75zMykmM',
+    }
 };
 
 // Multiple passwords untuk login
@@ -58,76 +67,124 @@ function validatePassword(req) {
     return null;
 }
 
-// Helper: Clean phone number
-function cleanPhoneNumber(number) {
-    if (typeof number !== 'string' && typeof number !== 'number') {
+// Helper: Clean input
+function cleanInput(input) {
+    if (typeof input !== 'string' && typeof input !== 'number') {
         return '';
     }
+    return String(input).trim();
+}
+
+// Helper: Format database structure
+function formatDatabaseData(items, itemType = 'phone') {
+    const now = new Date().toISOString();
     
-    const numStr = String(number);
-    return numStr.replace(/\D/g, '');
+    if (itemType === 'phone') {
+        // Format untuk nomor telepon
+        return {
+            numbers: items.map(item => ({
+                number: item.number.replace(/\D/g, ''),
+                addedDate: item.addedDate || now.split('T')[0]
+            })),
+            lastUpdate: now,
+            metadata: {
+                type: 'phone_numbers',
+                count: items.length,
+                version: '2.0'
+            }
+        };
+    } else {
+        // Format untuk newsletter
+        return {
+            items: items.map(item => ({
+                id: item.id || item,
+                addedDate: item.addedDate || now.split('T')[0]
+            })),
+            lastUpdate: now,
+            metadata: {
+                type: 'newsletter',
+                count: items.length,
+                version: '2.0'
+            }
+        };
+    }
 }
 
 // Helper: Convert old format to new format
-function convertToNewFormat(oldData) {
-    // Jika data adalah array string (format lama)
-    if (Array.isArray(oldData) && (oldData.length === 0 || typeof oldData[0] === 'string')) {
-        console.log('🔄 Converting old array format to new format');
-        return oldData.map(number => ({
-            number: cleanPhoneNumber(number),
-            addedDate: new Date().toISOString().split('T')[0]
-        }));
-    }
-    
-    // Jika sudah format baru
-    if (oldData && oldData.numbers && Array.isArray(oldData.numbers)) {
-        // Validasi setiap item
-        return oldData.numbers.map(item => {
-            if (typeof item === 'object' && item.number) {
-                return {
-                    number: cleanPhoneNumber(item.number),
-                    addedDate: item.addedDate || new Date().toISOString().split('T')[0]
-                };
-            }
-            // Jika ada yang masih string di dalam array numbers
-            return {
-                number: cleanPhoneNumber(item),
+function convertToNewFormat(oldData, itemType = 'phone') {
+    if (itemType === 'phone') {
+        // Jika data adalah array string (format lama)
+        if (Array.isArray(oldData) && (oldData.length === 0 || typeof oldData[0] === 'string')) {
+            console.log('🔄 Converting old phone array to new format');
+            return oldData.map(number => ({
+                number: cleanInput(number).replace(/\D/g, ''),
                 addedDate: new Date().toISOString().split('T')[0]
-            };
-        });
+            }));
+        }
+        
+        // Jika sudah format baru
+        if (oldData && oldData.numbers && Array.isArray(oldData.numbers)) {
+            return oldData.numbers.map(item => {
+                if (typeof item === 'object' && item.number) {
+                    return {
+                        number: cleanInput(item.number).replace(/\D/g, ''),
+                        addedDate: item.addedDate || new Date().toISOString().split('T')[0]
+                    };
+                }
+                return {
+                    number: cleanInput(item).replace(/\D/g, ''),
+                    addedDate: new Date().toISOString().split('T')[0]
+                };
+            });
+        }
+    } else {
+        // Untuk newsletter
+        if (Array.isArray(oldData)) {
+            console.log('🔄 Converting old newsletter array to new format');
+            return oldData.map(item => ({
+                id: cleanInput(item),
+                addedDate: new Date().toISOString().split('T')[0]
+            }));
+        }
+        
+        if (oldData && oldData.items && Array.isArray(oldData.items)) {
+            return oldData.items.map(item => {
+                if (typeof item === 'object' && item.id) {
+                    return {
+                        id: cleanInput(item.id),
+                        addedDate: item.addedDate || new Date().toISOString().split('T')[0]
+                    };
+                }
+                return {
+                    id: cleanInput(item),
+                    addedDate: new Date().toISOString().split('T')[0]
+                };
+            });
+        }
     }
     
-    // Default: empty array
     return [];
 }
 
-// API endpoint untuk get numbers
+// ========== PHONE NUMBERS API ==========
+
 app.get('/api/numbers', async (req, res) => {
     try {
-        console.log('🔑 GET /api/numbers requested');
+        console.log('📱 GET /api/numbers requested');
         
         // Check authorization
-        const authHeader = req.headers.authorization;
-        let clientPassword = null;
-        
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-            clientPassword = authHeader.substring(7);
-        } else if (req.query.password) {
-            clientPassword = req.query.password;
-        }
-        
-        if (!clientPassword || !APP_CONFIG.PASSWORDS.includes(clientPassword)) {
+        const clientPassword = validatePassword(req);
+        if (!clientPassword) {
             return res.status(401).json({
                 success: false,
                 error: 'Authentication required'
             });
         }
 
-        console.log('✅ Authentication successful');
+        console.log('✅ Phone auth successful');
         
         // Decrypt GitHub token
-        const decryptedToken = decryptToken(GITHUB_CONFIG.encryptedToken);
-        
+        const decryptedToken = decryptToken(GITHUB_CONFIG.phone.encryptedToken);
         if (!decryptedToken) {
             return res.status(500).json({
                 success: false,
@@ -135,11 +192,9 @@ app.get('/api/numbers', async (req, res) => {
             });
         }
 
-        console.log('📡 Fetching from GitHub...');
-        
         // Fetch data dari GitHub
         const response = await axios.get(
-            `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
+            `https://api.github.com/repos/${GITHUB_CONFIG.phone.owner}/${GITHUB_CONFIG.phone.repo}/contents/${GITHUB_CONFIG.phone.path}`,
             {
                 headers: {
                     'Authorization': `token ${decryptedToken}`,
@@ -154,12 +209,12 @@ app.get('/api/numbers', async (req, res) => {
         const content = Buffer.from(response.data.content, 'base64').toString('utf8');
         const githubData = content ? JSON.parse(content) : null;
         
-        console.log('📊 GitHub data type:', typeof githubData, Array.isArray(githubData) ? 'Array' : 'Object');
+        console.log(`📊 Phone data: ${Array.isArray(githubData) ? 'Array' : 'Object'}`);
         
         // Convert to new format
-        const numbers = convertToNewFormat(githubData);
+        const numbers = convertToNewFormat(githubData, 'phone');
         
-        console.log(`✅ Returning ${numbers.length} numbers`);
+        console.log(`✅ Returning ${numbers.length} phone numbers`);
         
         res.json({ 
             success: true, 
@@ -169,11 +224,9 @@ app.get('/api/numbers', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('❌ Error:', error.message);
+        console.error('❌ Phone API error:', error.message);
         
-        // Jika file tidak ditemukan
         if (error.response && error.response.status === 404) {
-            console.log('📄 File not found, returning empty');
             return res.json({
                 success: true,
                 numbers: [],
@@ -182,7 +235,7 @@ app.get('/api/numbers', async (req, res) => {
             });
         }
         
-        let errorMessage = 'Failed to fetch data';
+        let errorMessage = 'Failed to fetch phone data';
         let statusCode = 500;
         
         if (error.response) {
@@ -204,12 +257,11 @@ app.get('/api/numbers', async (req, res) => {
     }
 });
 
-// API endpoint untuk update numbers
 app.post('/api/numbers', async (req, res) => {
     try {
         const { numbers, commitMessage, password } = req.body;
         
-        console.log('📝 POST /api/numbers requested');
+        console.log('📱 POST /api/numbers requested');
         
         // Auth check
         if (!password || !APP_CONFIG.PASSWORDS.includes(password)) {
@@ -219,7 +271,7 @@ app.post('/api/numbers', async (req, res) => {
             });
         }
         
-        console.log('✅ Authentication successful');
+        console.log('✅ Phone update auth successful');
         
         // Validasi input
         if (!Array.isArray(numbers)) {
@@ -229,11 +281,11 @@ app.post('/api/numbers', async (req, res) => {
             });
         }
         
-        // Process numbers - pastikan format object dengan tanggal
+        // Process numbers
         const processedNumbers = numbers.map(item => {
             // Jika format object
             if (typeof item === 'object' && item.number) {
-                const cleanNum = cleanPhoneNumber(item.number);
+                const cleanNum = cleanInput(item.number).replace(/\D/g, '');
                 if (cleanNum) {
                     return {
                         number: cleanNum,
@@ -243,7 +295,7 @@ app.post('/api/numbers', async (req, res) => {
             }
             // Jika format string
             else if (typeof item === 'string' || typeof item === 'number') {
-                const cleanNum = cleanPhoneNumber(item);
+                const cleanNum = cleanInput(item).replace(/\D/g, '');
                 if (cleanNum) {
                     return {
                         number: cleanNum,
@@ -263,8 +315,7 @@ app.post('/api/numbers', async (req, res) => {
         }
         
         // Decrypt GitHub token
-        const decryptedToken = decryptToken(GITHUB_CONFIG.encryptedToken);
-        
+        const decryptedToken = decryptToken(GITHUB_CONFIG.phone.encryptedToken);
         if (!decryptedToken) {
             return res.status(500).json({
                 success: false,
@@ -277,7 +328,7 @@ app.post('/api/numbers', async (req, res) => {
         try {
             // Get current file SHA
             const getResponse = await axios.get(
-                `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
+                `https://api.github.com/repos/${GITHUB_CONFIG.phone.owner}/${GITHUB_CONFIG.phone.repo}/contents/${GITHUB_CONFIG.phone.path}`,
                 {
                     headers: {
                         'Authorization': `token ${decryptedToken}`,
@@ -286,19 +337,16 @@ app.post('/api/numbers', async (req, res) => {
                 }
             );
             sha = getResponse.data.sha;
-            console.log('📄 Got file SHA');
+            console.log('📄 Got phone file SHA');
         } catch (error) {
             if (error.response && error.response.status !== 404) {
                 throw error;
             }
-            console.log('📄 File does not exist yet');
+            console.log('📄 Phone file does not exist yet');
         }
         
-        // Prepare data untuk GitHub (format baru)
-        const dataForGitHub = {
-            numbers: processedNumbers,
-            lastUpdate: new Date().toISOString()
-        };
+        // Prepare data untuk GitHub
+        const dataForGitHub = formatDatabaseData(processedNumbers, 'phone');
         
         // Update payload
         const payload = {
@@ -310,11 +358,11 @@ app.post('/api/numbers', async (req, res) => {
             payload.sha = sha;
         }
         
-        console.log(`🔄 Saving ${processedNumbers.length} numbers to GitHub...`);
+        console.log(`🔄 Saving ${processedNumbers.length} phone numbers to GitHub...`);
         
         // Save to GitHub
         await axios.put(
-            `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
+            `https://api.github.com/repos/${GITHUB_CONFIG.phone.owner}/${GITHUB_CONFIG.phone.repo}/contents/${GITHUB_CONFIG.phone.path}`,
             payload,
             {
                 headers: {
@@ -325,20 +373,20 @@ app.post('/api/numbers', async (req, res) => {
             }
         );
         
-        console.log('✅ Saved to GitHub successfully');
+        console.log('✅ Phone numbers saved to GitHub');
         
         res.json({ 
             success: true, 
-            message: 'Numbers updated successfully',
+            message: 'Phone numbers updated successfully',
             count: processedNumbers.length,
             lastUpdateTime: dataForGitHub.lastUpdate,
             numbers: processedNumbers
         });
         
     } catch (error) {
-        console.error('❌ Update error:', error.message);
+        console.error('❌ Phone update error:', error.message);
         
-        let errorMessage = 'Failed to update data';
+        let errorMessage = 'Failed to update phone data';
         
         if (error.response) {
             switch (error.response.status) {
@@ -361,10 +409,102 @@ app.post('/api/numbers', async (req, res) => {
     }
 });
 
-// Endpoint untuk update tanggal manual
-app.post('/api/update-date', async (req, res) => {
+// ========== NEWSLETTER API ==========
+
+app.get('/api/newsletter', async (req, res) => {
     try {
-        const { number, newDate, password } = req.body;
+        console.log('📧 GET /api/newsletter requested');
+        
+        // Check authorization
+        const clientPassword = validatePassword(req);
+        if (!clientPassword) {
+            return res.status(401).json({
+                success: false,
+                error: 'Authentication required'
+            });
+        }
+
+        console.log('✅ Newsletter auth successful');
+        
+        // Decrypt GitHub token
+        const decryptedToken = decryptToken(GITHUB_CONFIG.newsletter.encryptedToken);
+        if (!decryptedToken) {
+            return res.status(500).json({
+                success: false,
+                error: 'Token decryption failed'
+            });
+        }
+
+        // Fetch data dari GitHub
+        const response = await axios.get(
+            `https://api.github.com/repos/${GITHUB_CONFIG.newsletter.owner}/${GITHUB_CONFIG.newsletter.repo}/contents/${GITHUB_CONFIG.newsletter.path}`,
+            {
+                headers: {
+                    'Authorization': `token ${decryptedToken}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'User-Agent': 'Node.js-App'
+                },
+                timeout: 10000
+            }
+        );
+        
+        // Decode content
+        const content = Buffer.from(response.data.content, 'base64').toString('utf8');
+        const githubData = content ? JSON.parse(content) : null;
+        
+        console.log(`📊 Newsletter data: ${Array.isArray(githubData) ? 'Array' : 'Object'}`);
+        
+        // Convert to new format
+        const items = convertToNewFormat(githubData, 'newsletter');
+        
+        console.log(`✅ Returning ${items.length} newsletter items`);
+        
+        res.json({ 
+            success: true, 
+            items: items,
+            lastUpdateTime: githubData?.lastUpdate || new Date().toISOString(),
+            totalCount: items.length
+        });
+        
+    } catch (error) {
+        console.error('❌ Newsletter API error:', error.message);
+        
+        if (error.response && error.response.status === 404) {
+            return res.json({
+                success: true,
+                items: [],
+                lastUpdateTime: new Date().toISOString(),
+                totalCount: 0
+            });
+        }
+        
+        let errorMessage = 'Failed to fetch newsletter data';
+        let statusCode = 500;
+        
+        if (error.response) {
+            statusCode = error.response.status;
+            switch (statusCode) {
+                case 401:
+                    errorMessage = 'GitHub authentication failed';
+                    break;
+                case 403:
+                    errorMessage = 'Rate limit exceeded';
+                    break;
+            }
+        }
+        
+        res.status(statusCode).json({ 
+            success: false, 
+            error: errorMessage
+        });
+    }
+});
+
+app.post('/api/newsletter', async (req, res) => {
+    try {
+        const { items, commitMessage, password } = req.body;
+        
+        console.log('📧 POST /api/newsletter requested');
         
         // Auth check
         if (!password || !APP_CONFIG.PASSWORDS.includes(password)) {
@@ -374,10 +514,161 @@ app.post('/api/update-date', async (req, res) => {
             });
         }
         
-        if (!number) {
+        console.log('✅ Newsletter update auth successful');
+        
+        // Validasi input
+        if (!Array.isArray(items)) {
             return res.status(400).json({
                 success: false,
-                error: 'Number is required'
+                error: 'Items must be an array'
+            });
+        }
+        
+        // Process items
+        const processedItems = items.map(item => {
+            // Jika format object
+            if (typeof item === 'object' && item.id) {
+                const cleanId = cleanInput(item.id);
+                if (cleanId) {
+                    return {
+                        id: cleanId,
+                        addedDate: item.addedDate || new Date().toISOString().split('T')[0]
+                    };
+                }
+            }
+            // Jika format string
+            else if (typeof item === 'string') {
+                const cleanId = cleanInput(item);
+                if (cleanId) {
+                    return {
+                        id: cleanId,
+                        addedDate: new Date().toISOString().split('T')[0]
+                    };
+                }
+            }
+            
+            return null;
+        }).filter(item => item !== null);
+        
+        if (processedItems.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'No valid items to save'
+            });
+        }
+        
+        // Decrypt GitHub token
+        const decryptedToken = decryptToken(GITHUB_CONFIG.newsletter.encryptedToken);
+        if (!decryptedToken) {
+            return res.status(500).json({
+                success: false,
+                error: 'Token decryption failed'
+            });
+        }
+        
+        let sha = null;
+        
+        try {
+            // Get current file SHA
+            const getResponse = await axios.get(
+                `https://api.github.com/repos/${GITHUB_CONFIG.newsletter.owner}/${GITHUB_CONFIG.newsletter.repo}/contents/${GITHUB_CONFIG.newsletter.path}`,
+                {
+                    headers: {
+                        'Authorization': `token ${decryptedToken}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                }
+            );
+            sha = getResponse.data.sha;
+            console.log('📄 Got newsletter file SHA');
+        } catch (error) {
+            if (error.response && error.response.status !== 404) {
+                throw error;
+            }
+            console.log('📄 Newsletter file does not exist yet');
+        }
+        
+        // Prepare data untuk GitHub
+        const dataForGitHub = formatDatabaseData(processedItems, 'newsletter');
+        
+        // Update payload
+        const payload = {
+            message: commitMessage || 'Update newsletter',
+            content: Buffer.from(JSON.stringify(dataForGitHub, null, 2)).toString('base64')
+        };
+        
+        if (sha) {
+            payload.sha = sha;
+        }
+        
+        console.log(`🔄 Saving ${processedItems.length} newsletter items to GitHub...`);
+        
+        // Save to GitHub
+        await axios.put(
+            `https://api.github.com/repos/${GITHUB_CONFIG.newsletter.owner}/${GITHUB_CONFIG.newsletter.repo}/contents/${GITHUB_CONFIG.newsletter.path}`,
+            payload,
+            {
+                headers: {
+                    'Authorization': `token ${decryptedToken}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        
+        console.log('✅ Newsletter items saved to GitHub');
+        
+        res.json({ 
+            success: true, 
+            message: 'Newsletter updated successfully',
+            count: processedItems.length,
+            lastUpdateTime: dataForGitHub.lastUpdate,
+            items: processedItems
+        });
+        
+    } catch (error) {
+        console.error('❌ Newsletter update error:', error.message);
+        
+        let errorMessage = 'Failed to update newsletter data';
+        
+        if (error.response) {
+            switch (error.response.status) {
+                case 401:
+                    errorMessage = 'GitHub authentication failed';
+                    break;
+                case 404:
+                    errorMessage = 'Repository not found';
+                    break;
+                case 409:
+                    errorMessage = 'Conflict: File was modified';
+                    break;
+            }
+        }
+        
+        res.status(500).json({ 
+            success: false, 
+            error: errorMessage
+        });
+    }
+});
+
+// Endpoint untuk update tanggal manual (untuk kedua database)
+app.post('/api/update-date', async (req, res) => {
+    try {
+        const { id, newDate, password, type = 'phone' } = req.body;
+        
+        // Auth check
+        if (!password || !APP_CONFIG.PASSWORDS.includes(password)) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Invalid password' 
+            });
+        }
+        
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                error: 'ID is required'
             });
         }
 
@@ -390,18 +681,19 @@ app.post('/api/update-date', async (req, res) => {
             });
         }
         
-        const cleanNumber = cleanPhoneNumber(number);
-        if (!cleanNumber) {
+        const cleanId = cleanInput(id);
+        if (!cleanId) {
             return res.status(400).json({
                 success: false,
-                error: 'Invalid phone number'
+                error: 'Invalid ID'
             });
         }
         
         const finalDate = newDate || new Date().toISOString().split('T')[0];
         
-        // Decrypt GitHub token
-        const decryptedToken = decryptToken(GITHUB_CONFIG.encryptedToken);
+        // Pilih config berdasarkan type
+        const config = type === 'phone' ? GITHUB_CONFIG.phone : GITHUB_CONFIG.newsletter;
+        const decryptedToken = decryptToken(config.encryptedToken);
         
         if (!decryptedToken) {
             return res.status(500).json({
@@ -411,12 +703,12 @@ app.post('/api/update-date', async (req, res) => {
         }
         
         // 1. Get current data from GitHub
-        let currentData = { numbers: [], lastUpdate: new Date().toISOString() };
+        let currentData = null;
         let sha = null;
         
         try {
             const getResponse = await axios.get(
-                `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
+                `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`,
                 {
                     headers: {
                         'Authorization': `token ${decryptedToken}`,
@@ -427,7 +719,7 @@ app.post('/api/update-date', async (req, res) => {
             
             sha = getResponse.data.sha;
             const content = Buffer.from(getResponse.data.content, 'base64').toString('utf8');
-            currentData = content ? JSON.parse(content) : { numbers: [] };
+            currentData = content ? JSON.parse(content) : null;
             
         } catch (error) {
             if (error.response && error.response.status !== 404) {
@@ -435,13 +727,15 @@ app.post('/api/update-date', async (req, res) => {
             }
         }
         
-        // 2. Convert to new format jika masih format lama
-        let numbers = convertToNewFormat(currentData);
+        // 2. Convert to new format
+        let dataItems = convertToNewFormat(currentData, type);
         
         // 3. Find and update the date
         let updated = false;
-        numbers = numbers.map(item => {
-            if (cleanPhoneNumber(item.number) === cleanNumber) {
+        const fieldName = type === 'phone' ? 'number' : 'id';
+        
+        dataItems = dataItems.map(item => {
+            if (cleanInput(item[fieldName]) === cleanId) {
                 updated = true;
                 return {
                     ...item,
@@ -451,23 +745,20 @@ app.post('/api/update-date', async (req, res) => {
             return item;
         });
         
-        // 4. Jika nomor tidak ditemukan, tambahkan baru
+        // 4. Jika item tidak ditemukan, tambahkan baru
         if (!updated) {
-            numbers.push({
-                number: cleanNumber,
+            dataItems.push({
+                [fieldName]: cleanId,
                 addedDate: finalDate
             });
         }
         
         // 5. Prepare update data
-        const updateData = {
-            numbers: numbers,
-            lastUpdate: new Date().toISOString()
-        };
+        const updateData = formatDatabaseData(dataItems, type);
         
         // 6. Save back to GitHub
         const payload = {
-            message: `Update date for number: ${cleanNumber} to ${finalDate}`,
+            message: `Update date for ${type === 'phone' ? 'number' : 'newsletter'}: ${cleanId} to ${finalDate}`,
             content: Buffer.from(JSON.stringify(updateData, null, 2)).toString('base64')
         };
         
@@ -476,7 +767,7 @@ app.post('/api/update-date', async (req, res) => {
         }
         
         await axios.put(
-            `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
+            `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`,
             payload,
             {
                 headers: {
@@ -487,12 +778,12 @@ app.post('/api/update-date', async (req, res) => {
             }
         );
         
-        console.log(`✅ Updated date for ${cleanNumber} to ${finalDate}`);
+        console.log(`✅ Updated date for ${cleanId} to ${finalDate}`);
         
         res.json({
             success: true,
             message: 'Date updated successfully',
-            number: cleanNumber,
+            id: cleanId,
             newDate: finalDate,
             action: updated ? 'updated' : 'added new'
         });
@@ -506,56 +797,24 @@ app.post('/api/update-date', async (req, res) => {
     }
 });
 
-// API endpoint untuk login
-app.post('/api/login', (req, res) => {
-    try {
-        const { password } = req.body;
-        
-        if (!password) {
-            return res.status(400).json({
-                success: false,
-                error: 'Password is required'
-            });
-        }
-        
-        if (APP_CONFIG.PASSWORDS.includes(password)) {
-            return res.json({
-                success: true,
-                message: 'Login successful',
-                timestamp: new Date().toISOString()
-            });
-        } else {
-            return res.status(401).json({
-                success: false,
-                error: 'Invalid password'
-            });
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Login failed'
-        });
-    }
-});
-
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({
         status: 'OK',
         timestamp: new Date().toISOString(),
-        version: '3.0-final',
+        version: '3.0-dual-database',
         features: {
             multiPassword: true,
             dateTracking: true,
-            githubStorage: true,
+            phoneDatabase: true,
+            newsletterDatabase: true,
             noLocalFiles: true,
             encryptedToken: true
         },
         config: {
             validPasswords: APP_CONFIG.PASSWORDS.length,
-            owner: GITHUB_CONFIG.owner,
-            repo: GITHUB_CONFIG.repo
+            phoneFile: GITHUB_CONFIG.phone.path,
+            newsletterFile: GITHUB_CONFIG.newsletter.path
         }
     });
 });
@@ -576,20 +835,19 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📁 GitHub: ${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}`);
+    console.log(`📁 GitHub Repository: ${GITHUB_CONFIG.phone.owner}/${GITHUB_CONFIG.phone.repo}`);
+    console.log(`📄 Database Files:`);
+    console.log(`   - Phone Numbers: ${GITHUB_CONFIG.phone.path}`);
+    console.log(`   - Newsletter: ${GITHUB_CONFIG.newsletter.path}`);
     console.log(`🔑 Valid passwords: ${APP_CONFIG.PASSWORDS.join(', ')}`);
-    console.log(`✨ FINAL VERSION FEATURES:`);
-    console.log(`   1. Multiple password support`);
-    console.log(`   2. Store dates IN GITHUB (not locally)`);
-    console.log(`   3. Auto-convert old format to new`);
-    console.log(`   4. No local files needed`);
-    console.log(`   5. Edit dates directly in GitHub`);
-    console.log(`\n📊 GitHub db.json format:`);
-    console.log(`   {
-      "numbers": [
-        {"number": "628xxx", "addedDate": "2024-01-01"},
-        {"number": "131xxx", "addedDate": "2024-01-02"}
-      ],
-      "lastUpdate": "2024-01-17T..."
-    }`);
+    console.log(`✨ DUAL DATABASE FEATURES:`);
+    console.log(`   1. Phone Numbers API: GET/POST /api/numbers`);
+    console.log(`   2. Newsletter API: GET/POST /api/newsletter`);
+    console.log(`   3. Shared date update: POST /api/update-date`);
+    console.log(`   4. Auto-format conversion`);
+    console.log(`   5. Multiple password support`);
+    console.log(`\n📊 API Endpoints:`);
+    console.log(`   - Phone DB: http://localhost:${PORT}/api/numbers`);
+    console.log(`   - Newsletter DB: http://localhost:${PORT}/api/newsletter`);
+    console.log(`   - Health: http://localhost:${PORT}/health`);
 });

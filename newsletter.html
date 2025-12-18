@@ -1,528 +1,1238 @@
--<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RulzXD Newsletter</title>
+    <title>Database - RulzXD Newsletter</title>
     <link rel="icon" href="logo.jpg">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-  
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1>RulzXD Newsletter</h1>
-            <p>Mengelola newsletter menggunakan GitHub sebagai database.</p>
-        </div>
-
-        <!-- Database Display -->
-        <div class="database-container">
-            <div class="database-header">
-                <h2>Newsletter</h2>
-                <div class="count-container">
-                    <span id="numbersCount">Loading...</span>
-                    <span id="lastUpdated"></span>
-                </div>
-            </div>
-            <div id="numbersContainer" class="numbers-grid">
-                <div class="loading-state">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Loading database...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Control Buttons -->
-        <div class="controls">
-            <button id="addBtn" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add Newsletter
-            </button>
-            <button id="deleteBtn" class="btn btn-danger">
-                <i class="fas fa-trash"></i> Delete Newsletter
-            </button>
-            <button id="refreshBtn" class="btn btn-secondary">
-                <i class="fas fa-sync-alt"></i> Refresh
-            </button>
-        </div>
-    </div>
-
-    <!-- Auth Modal -->
-    <div id="authModal" class="modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Owner Authentication</h3>
-                <button id="closeAuthModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Password</label>
-                    <div class="input-group">
-                        <input type="password" id="passwordInput" placeholder="Masukkan password">
-                        <button id="togglePassword"><i class="fas fa-eye"></i></button>
-                    </div>
-                </div>
-                <div id="authError" class="error-message"></div>
-            </div>
-            <div class="modal-footer">
-                <button id="confirmAuth" class="btn btn-primary">Enter</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Operation Modal -->
-    <div id="operationModal" class="modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="operationTitle">Operation</h3>
-                <button id="closeOperationModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="operationContent" class="form-group">
-                    <label>Newsletter</label>
-                    <input type="text" id="phoneNumberInput" placeholder="Example: 120363338913902426@newsletter">
-                    <div id="formattedNumberPreview" class="preview-box">
-                        <small>Will be saved :</small>
-                        <div id="formattedNumber" class="preview-number"></div>
-                    </div>
-                </div>
-                <div id="operationError" class="error-message"></div>
-            </div>
-            <div class="modal-footer">
-                <button id="cancelOperation" class="btn btn-secondary">Cancel</button>
-                <button id="confirmOperation" class="btn btn-primary">Confirm</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Status Toast -->
-    <div id="statusToast" class="toast">
-        <div id="statusContent" class="toast-content"></div>
-    </div>
     
-    <footer class="copyright">
-        <p>&copy; <span>Rulzz OfficiaL.</span> All Rights Reserved.</p>
-        <p class="bujug">Colong sc yatim</p>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    
+    <style>
+        :root {
+            --bg-1: #0a1129;
+            --bg-2: #0f1a3d;
+            --card: rgba(30, 58, 138, 0.15);
+            --muted: #93c5fd;
+            --accent-from: #2563eb;
+            --accent-to: #3b82f6;
+            --glass-border: rgba(59, 130, 246, 0.15);
+            --text: #e0f2fe;
+            --shadow: rgba(2, 8, 30, 0.6);
+            --error: #ef4444;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.5;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: rgba(15, 26, 61, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 0 16px;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-sub {
+            font-size: 11px;
+            color: var(--muted);
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .logo-sub {
+                display: block;
+            }
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(34,197,94,0.15);
+            color: #4ade80;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4ade80;
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            text-decoration: none;
+            height: 44px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(59, 130, 246, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(90deg, var(--error), #f87171);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* GLASS EFFECT */
+        .glass {
+            background: var(--card);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+        }
+
+        /* FORM */
+        .form-input {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text);
+            width: 100%;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-from);
+            background: rgba(59, 130, 246, 0.15);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            padding-top: 80px;
+            padding-bottom: 40px;
+            min-height: calc(100vh - 120px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* LOGIN PAGE */
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 32px;
+        }
+
+        /* DASHBOARD */
+        .dashboard-header {
+            margin-bottom: 24px;
+        }
+
+        .dashboard-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .dashboard-subtitle {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* STATS CARD */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .stats-card {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stats-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-to);
+            margin-bottom: 4px;
+        }
+
+        .stats-label {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* ITEMS GRID */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .item-card {
+            padding: 16px;
+            border-left: 4px solid var(--accent-to);
+        }
+
+        .item-text {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            word-break: break-all;
+            color: white;
+        }
+
+        .item-date {
+            font-size: 12px;
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+            flex-wrap: wrap;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            padding: 16px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        /* NOTIFICATION */
+        .notification-container {
+            position: fixed;
+            top: 80px;
+            right: 16px;
+            z-index: 1000;
+            max-width: 320px;
+            width: 90%;
+        }
+
+        @media (max-width: 640px) {
+            .notification-container {
+                right: 8px;
+                left: 8px;
+                max-width: calc(100vw - 16px);
+                width: 90%;
+            }
+        }
+
+        .notification {
+            background: var(--card);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease;
+            font-size: 13px;
+            max-width: 100%;
+        }
+
+        .notification.success {
+            border-left-color: #22c55e;
+            background: rgba(34, 197, 94, 0.12);
+        }
+
+        .notification.error {
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.12);
+        }
+
+        .notification.info {
+            border-left-color: var(--accent-from);
+            background: rgba(37, 99, 235, 0.12);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(120%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* LOADING */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            flex-direction: column;
+            grid-column: 1 / -1;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--accent-from);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* FOOTER */
+        .footer {
+            padding: 20px 0;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            background: rgba(15, 26, 61, 0.3);
+        }
+
+        .footer-text {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* UTILITIES */
+        .hidden {
+            display: none;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+
+        .mb-2 { margin-bottom: 8px; }
+        .mb-3 { margin-bottom: 12px; }
+        .mb-4 { margin-bottom: 16px; }
+
+        .w-full { width: 100%; }
+        .flex-1 { flex: 1; }
+
+        /* PASSWORD INPUT WRAPPER */
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        /* HAMBURGER MENU */
+        .hamburger {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        @media (min-width: 769px) {
+            .hamburger {
+                display: none;
+            }
+        }
+
+        .hamburger:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .hamburger span {
+            width: 20px;
+            height: 2px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 280px;
+            height: 100vh;
+            background: rgba(15, 26, 61, 0.98);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid var(--glass-border);
+            z-index: 999;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .mobile-menu.show {
+            left: 0;
+        }
+
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            display: none;
+        }
+
+        .mobile-overlay.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <div>
+                    <div class="logo-text">RulzXD Newsletter Database</div>
+                    <span class="logo-sub">Manage newsletter IDs with GitHub</span>
+                </div>
+                <span class="status-badge">Online</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button id="logoutBtn" class="btn-icon text-red-400 hidden md:flex" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mb-8">
+            <div class="logo">
+                <div>
+                    <div class="logo-text">RulzXD Newsletter</div>
+                    <span class="logo-sub">Manage newsletter IDs</span>
+                </div>
+            </div>
+        </div>
+
+        <button id="logoutBtnMobile" class="btn w-full justify-start text-red-400">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+
+    <!-- Notifications -->
+    <div class="notification-container"></div>
+
+    <!-- Login Page -->
+    <section id="loginPage" class="login-page">
+        <div class="login-box glass">
+            <div class="text-center mb-6">
+                <i class="fas fa-newspaper text-2xl text-blue-400 mb-3"></i>
+                <h1 class="text-xl font-bold gradient-text mb-2">Newsletter Login</h1>
+                <p class="text-gray-400 text-sm">Enter your credentials to access the database</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label class="form-label">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" class="form-input" placeholder="Enter password" required>
+                        <button type="button" class="toggle-password" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login
+                </button>
+            </form>
+
+            <div id="loginError" class="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 text-sm hidden">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <span>Invalid password</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard -->
+    <section id="dashboard" class="main-content hidden">
+        <div class="container">
+            <!-- Header -->
+            <div class="glass p-6 mb-6">
+                <div class="dashboard-header">
+                    <h1 class="dashboard-title">Newsletter Database</h1>
+                    <p class="dashboard-subtitle">Manage your newsletter IDs stored on GitHub</p>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stats-card glass">
+                    <div class="stats-value" id="totalCount">0</div>
+                    <div class="stats-label">Total Items</div>
+                </div>
+                <div class="stats-card glass">
+                    <div class="stats-value" id="lastUpdatedTime">--:--:--</div>
+                    <div class="stats-label">Last Updated</div>
+                </div>
+                <div class="stats-card glass">
+                    <div class="stats-value" id="storageUsed">0 KB</div>
+                    <div class="stats-label">Storage Used</div>
+                </div>
+            </div>
+
+            <!-- Database Content -->
+            <div class="glass p-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                    <h2 class="text-lg font-bold text-blue-300">Newsletter IDs</h2>
+                    <div class="flex gap-3">
+                        <button id="addBtn" class="btn btn-success">
+                            <i class="fas fa-plus mr-2"></i>Add Item
+                        </button>
+                        <button id="deleteBtn" class="btn btn-danger">
+                            <i class="fas fa-trash mr-2"></i>Delete
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Items List -->
+                <div id="itemsContainer" class="items-grid">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p class="mt-2 text-gray-400 text-sm">Loading database...</p>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button id="refreshBtn" class="btn btn-secondary">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh Database
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Add/Edit Modal -->
+    <div id="itemModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-blue-300" id="modalTitle">Add Newsletter ID</h3>
+                <button id="closeModal" class="btn-icon">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="itemForm">
+                <div class="mb-4">
+                    <label class="form-label">Newsletter ID</label>
+                    <input type="text" id="itemInput" class="form-input" placeholder="120363338913902426@newsletter" required>
+                    <p class="text-xs text-gray-400 mt-1">Enter newsletter ID (e.g., @newsletter)</p>
+                </div>
+
+                <div id="itemPreview" class="mb-4 p-3 bg-blue-500/10 rounded-lg hidden">
+                    <p class="text-sm text-blue-300">Preview: <span id="previewItem"></span></p>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="btn btn-primary flex-1" id="modalSubmitBtn">
+                        <i class="fas fa-check mr-2"></i>Confirm
+                    </button>
+                    <button type="button" id="cancelModal" class="btn btn-secondary flex-1">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">
+                © <span id="currentYear">2025</span> RulzXD Newsletter Database - All rights reserved
+            </p>
+        </div>
     </footer>
 
-<script>
-  const GITHUB_CONFIG = {
-    owner: "rulzzml",
-    repo: "sc",
-    path: "news.json",
-    token: "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"
-};
+    <script>
+        // State Management
+        const state = {
+            items: [], // Array of objects: { id: string, addedDate: string }
+            isAuthenticated: false,
+            currentOperation: null
+        };
 
-const OWNER_CONFIG = {
-    password: "rulzzxd",
-    sessionTimeout: 30 * 60 * 1000 // 30 minutes
-};
-  document.onkeydown = e => {
-    if(e.key == "F12"){
-      alert("Eakk mau inspect yaa")
-      return false
-    }
-    if(e.ctrlKey && e.key == "u") {
-      alert("Eakk mau inspect yaa")
-      return false
-    }
-    if(e.ctrlKey && e.key == "c") {
-      alert("Ga baik bang copy² gitu🤣")
-      return false
-    }
-    if(e.ctrlKey && e.key == "v") {
-      alert("Ngapain??")
-      return false
-    }
-  }
-  
-  const state = {
-    numbers: [],
-    currentOperation: null,
-    isAuthenticated: false,
-    sessionTimeout: null
-};
+        // Configuration - NEWSLETTER VERSION
+        const APP_CONFIG = {
+            PASSWORDS: ["RulzzGanteng", "admin123", "password123"],
+            API_URL: "/api/newsletter"  // CHANGED: Use newsletter endpoint
+        };
 
-// DOM Elements
-const elements = {
-    numbersContainer: document.getElementById('numbersContainer'),
-    numbersCount: document.getElementById('numbersCount'),
-    lastUpdated: document.getElementById('lastUpdated'),
-    addBtn: document.getElementById('addBtn'),
-    deleteBtn: document.getElementById('deleteBtn'),
-    refreshBtn: document.getElementById('refreshBtn'),
-    authModal: document.getElementById('authModal'),
-    passwordInput: document.getElementById('passwordInput'),
-    togglePassword: document.getElementById('togglePassword'),
-    authError: document.getElementById('authError'),
-    confirmAuth: document.getElementById('confirmAuth'),
-    closeAuthModal: document.getElementById('closeAuthModal'),
-    operationModal: document.getElementById('operationModal'),
-    operationTitle: document.getElementById('operationTitle'),
-    phoneNumberInput: document.getElementById('phoneNumberInput'),
-    formattedNumberPreview: document.getElementById('formattedNumberPreview'),
-    formattedNumber: document.getElementById('formattedNumber'),
-    operationError: document.getElementById('operationError'),
-    confirmOperation: document.getElementById('confirmOperation'),
-    closeOperationModal: document.getElementById('closeOperationModal'),
-    cancelOperation: document.getElementById('cancelOperation'),
-    statusToast: document.getElementById('statusToast'),
-    statusContent: document.getElementById('statusContent')
-};
+        // DOM Elements
+        const elements = {
+            // Navbar
+            logoutBtn: document.getElementById('logoutBtn'),
+            logoutBtnMobile: document.getElementById('logoutBtnMobile'),
+            hamburger: document.querySelector('.hamburger'),
+            mobileOverlay: document.getElementById('mobileOverlay'),
+            mobileMenu: document.getElementById('mobileMenu'),
+            
+            // Login
+            loginPage: document.getElementById('loginPage'),
+            loginForm: document.getElementById('loginForm'),
+            passwordInput: document.getElementById('password'),
+            togglePassword: document.getElementById('togglePassword'),
+            loginError: document.getElementById('loginError'),
+            
+            // Dashboard
+            dashboard: document.getElementById('dashboard'),
+            refreshBtn: document.getElementById('refreshBtn'),
+            addBtn: document.getElementById('addBtn'),
+            deleteBtn: document.getElementById('deleteBtn'),
+            
+            // Stats
+            totalCount: document.getElementById('totalCount'),
+            lastUpdatedTime: document.getElementById('lastUpdatedTime'),
+            storageUsed: document.getElementById('storageUsed'),
+            
+            // Items Container
+            itemsContainer: document.getElementById('itemsContainer'),
+            
+            // Modal
+            itemModal: document.getElementById('itemModal'),
+            modalTitle: document.getElementById('modalTitle'),
+            itemInput: document.getElementById('itemInput'),
+            itemPreview: document.getElementById('itemPreview'),
+            previewItem: document.getElementById('previewItem'),
+            itemForm: document.getElementById('itemForm'),
+            modalSubmitBtn: document.getElementById('modalSubmitBtn'),
+            closeModal: document.getElementById('closeModal'),
+            cancelModal: document.getElementById('cancelModal')
+        };
 
-// Initialize the application
-function init() {
-    setupEventListeners();
-    loadNumbers();
-}
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const container = document.querySelector('.notification-container');
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const icon = type === 'success' ? 'check-circle' :
+                        type === 'error' ? 'exclamation-circle' : 'info-circle';
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${icon} mr-2 ${type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : 'text-blue-500'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            container.appendChild(notification);
 
-// Set up all event listeners
-function setupEventListeners() {
-    // Button actions
-    elements.addBtn.addEventListener('click', () => handleOperationClick('add'));
-    elements.deleteBtn.addEventListener('click', () => handleOperationClick('delete'));
-    elements.refreshBtn.addEventListener('click', refreshData);
-
-    // Auth modal
-    elements.closeAuthModal.addEventListener('click', hideAuthModal);
-    elements.confirmAuth.addEventListener('click', authenticate);
-    elements.togglePassword.addEventListener('click', togglePasswordVisibility);
-
-    // Operation modal
-    elements.closeOperationModal.addEventListener('click', hideOperationModal);
-    elements.cancelOperation.addEventListener('click', hideOperationModal);
-    elements.confirmOperation.addEventListener('click', performOperation);
-    elements.phoneNumberInput.addEventListener('input', formatPhoneNumberInput);
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            hideAuthModal();
-            hideOperationModal();
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
         }
-    });
-}
 
-// Handle operation button clicks
-function handleOperationClick(operation) {
-    state.currentOperation = operation;
-    if (state.isAuthenticated) {
-        showOperationModal(operation);
-    } else {
-        showAuthModal();
-    }
-}
-
-// Authentication functions
-function showAuthModal() {
-    elements.passwordInput.value = '';
-    elements.authError.textContent = '';
-    elements.authError.classList.remove('show');
-    elements.authModal.classList.add('show');
-    elements.passwordInput.focus();
-}
-
-function hideAuthModal() {
-    elements.authModal.classList.remove('show');
-}
-
-function togglePasswordVisibility() {
-    const isPassword = elements.passwordInput.type === 'password';
-    elements.passwordInput.type = isPassword ? 'text' : 'password';
-    elements.togglePassword.innerHTML = isPassword ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
-}
-
-function authenticate() {
-    const password = elements.passwordInput.value.trim();
-    
-    if (password === OWNER_CONFIG.password) {
-        state.isAuthenticated = true;
-        startSessionTimer();
-        hideAuthModal();
-        showOperationModal(state.currentOperation);
-    } else {
-        showAuthError('Password salah! Hanya owner yang dapat menggunakan fitur ini.');
-        elements.passwordInput.classList.add('shake');
-        setTimeout(() => elements.passwordInput.classList.remove('shake'), 500);
-    }
-}
-
-function showAuthError(message) {
-    elements.authError.textContent = message;
-    elements.authError.classList.add('show');
-}
-
-function startSessionTimer() {
-    clearTimeout(state.sessionTimeout);
-    state.sessionTimeout = setTimeout(() => {
-        state.isAuthenticated = false;
-        showStatus('Session expired. Please login again.', 'warning');
-    }, OWNER_CONFIG.sessionTimeout);
-}
-
-// Operation functions
-function showOperationModal(operation) {
-    elements.operationTitle.textContent = operation === 'add' ? 'Tambahkan Newsletter' : 'Hapus Newsletter';
-    elements.phoneNumberInput.value = '';
-    elements.operationError.textContent = '';
-    elements.operationError.classList.remove('show');
-    elements.formattedNumberPreview.classList.remove('show');
-    
-    if (operation === 'add') {
-        elements.confirmOperation.className = 'btn btn-primary';
-        elements.confirmOperation.innerHTML = '<i class="fas fa-plus"></i> Add';
-    } else {
-        elements.confirmOperation.className = 'btn btn-danger';
-        elements.confirmOperation.innerHTML = '<i class="fas fa-trash"></i> Delete';
-    }
-    
-    elements.operationModal.classList.add('show');
-    setTimeout(() => elements.phoneNumberInput.focus(), 100);
-}
-
-function hideOperationModal() {
-    elements.operationModal.classList.remove('show');
-}
-
-function formatPhoneNumberInput() {
-    let input = elements.phoneNumberInput.value.trim();
-    if (!input.endsWith("@newsletter")) {
-        input = input.replace(/\D/g, '') + "@newsletter";
-    }
-    elements.phoneNumberInput.value = input;
-    elements.formattedNumber.textContent = input;
-    if (input.length >= 20) {
-        elements.formattedNumberPreview.classList.add('show');
-    } else {
-        elements.formattedNumberPreview.classList.remove('show');
-    }
-}
-
-function validatePhoneNumber(number) {
-    if (!number) return 'Kolom harus di isi!';
-    if (number.length < 10) return 'Newsletter terlalu pendek (minimal 10 nomor).';
-    return null;
-}
-
-async function performOperation() {
-    const number = elements.phoneNumberInput.value.trim();
-    const validationError = validatePhoneNumber(number);
-    
-    if (validationError) {
-        showOperationError(validationError);
-        return;
-    }
-
-    try {
-        if (state.currentOperation === 'add') {
-            await addNumberToDatabase(number);
-        } else {
-            await deleteNumberFromDatabase(number);
+        // Toggle password visibility
+        function initPasswordToggle() {
+            if (elements.togglePassword && elements.passwordInput) {
+                elements.togglePassword.addEventListener('click', () => {
+                    const type = elements.passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    elements.passwordInput.setAttribute('type', type);
+                    
+                    // Toggle icon
+                    const icon = elements.togglePassword.querySelector('i');
+                    if (type === 'text') {
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            }
         }
-    } catch (error) {
-        console.error('Operation failed:', error);
-        showStatus(`Failed to ${state.currentOperation} number`, 'error');
-    }
-}
 
-function showOperationError(message) {
-    elements.operationError.textContent = message;
-    elements.operationError.classList.add('show');
-    elements.phoneNumberInput.classList.add('shake');
-    setTimeout(() => elements.phoneNumberInput.classList.remove('shake'), 500);
-}
+        // Mobile Menu
+        function initMobileMenu() {
+            if (elements.hamburger && elements.mobileMenu && elements.mobileOverlay) {
+                elements.hamburger.addEventListener('click', () => {
+                    elements.mobileMenu.classList.add('show');
+                    elements.mobileOverlay.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                });
 
-// Data management functions
-async function loadNumbers() {
-    try {
-        showLoadingState();
-        
-        const response = await fetch(
-            `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
-            {
-                headers: {
-                    'Authorization': `token ${GITHUB_CONFIG.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
+                elements.mobileOverlay.addEventListener('click', () => {
+                    closeMobileMenu();
+                });
+
+                elements.logoutBtnMobile.addEventListener('click', () => {
+                    handleLogout();
+                    closeMobileMenu();
+                });
+            }
+        }
+
+        function closeMobileMenu() {
+            elements.mobileMenu?.classList.remove('show');
+            elements.mobileOverlay?.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Login System
+        function initLogin() {
+            const savedAuth = localStorage.getItem('newsletter_auth');
+            if (savedAuth === 'true') {
+                state.isAuthenticated = true;
+                showDashboard();
+                loadItems();
+            }
+
+            if (elements.loginForm) {
+                elements.loginForm.addEventListener('submit', handleLogin);
+            }
+
+            elements.logoutBtn?.addEventListener('click', handleLogout);
+            elements.logoutBtnMobile?.addEventListener('click', handleLogout);
+            
+            // Initialize password toggle
+            initPasswordToggle();
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const password = elements.passwordInput.value.trim();
+
+            if (APP_CONFIG.PASSWORDS.includes(password)) {
+                state.isAuthenticated = true;
+                localStorage.setItem('newsletter_auth', 'true');
+                showDashboard();
+                loadItems();
+                showNotification('Login successful!', 'success');
+            } else {
+                elements.loginError.classList.remove('hidden');
+                setTimeout(() => {
+                    elements.loginError.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        function handleLogout() {
+            state.isAuthenticated = false;
+            localStorage.removeItem('newsletter_auth');
+            showLogin();
+            closeMobileMenu();
+            showNotification('Logged out successfully', 'info');
+        }
+
+        function showLogin() {
+            elements.loginPage.classList.remove('hidden');
+            elements.dashboard.classList.add('hidden');
+            if (elements.loginForm) elements.loginForm.reset();
+            // Reset password field type
+            elements.passwordInput.setAttribute('type', 'password');
+            const icon = elements.togglePassword.querySelector('i');
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+
+        function showDashboard() {
+            elements.loginPage.classList.add('hidden');
+            elements.dashboard.classList.remove('hidden');
+        }
+
+        // API Functions
+        async function loadItems() {
+            try {
+                showLoading();
+                
+                // Get password from localStorage
+                const savedAuth = localStorage.getItem('newsletter_auth');
+                const password = savedAuth === 'true' ? APP_CONFIG.PASSWORDS[0] : null;
+                
+                if (!password) {
+                    showError('Not authenticated');
+                    return;
                 }
-            }
-        );
-
-        if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
-
-        const data = await response.json();
-        const content = atob(data.content);
-        state.numbers = content ? JSON.parse(content) : [];
-        
-        renderNumbers();
-        updateLastUpdated();
-        showStatus('Berhasil memuat ulang website..');
-    } catch (error) {
-        console.error('Failed to load numbers:', error);
-        showErrorState(error.message);
-    } finally {
-        elements.refreshBtn.classList.remove('animate-pulse');
-    }
-}
-
-async function addNumberToDatabase(number) {
-    if (state.numbers.includes(number)) {
-        showOperationError('This newsletter already exists in database');
-        return;
-    }
-
-    const newNumbers = [...state.numbers, number];
-    await updateDatabase(newNumbers, `Add number ${number}`);
-    state.numbers = newNumbers;
-    
-    hideOperationModal();
-    renderNumbers();
-    showStatus(`Newsletter ${number} berhasil ditambahkan`);
-}
-
-async function deleteNumberFromDatabase(number) {
-    const index = state.numbers.indexOf(number);
-    if (index === -1) {
-        showOperationError('Newsletter tidak terdaftar di database.');
-        return;
-    }
-
-    const newNumbers = [...state.numbers];
-    newNumbers.splice(index, 1);
-    await updateDatabase(newNumbers, `Remove newsletter ${number}`);
-    state.numbers = newNumbers;
-    
-    hideOperationModal();
-    renderNumbers();
-    showStatus(`Newsletter ${number} berhasil dihapus.`);
-}
-
-async function updateDatabase(numbers, commitMessage) {
-    const response = await fetch(
-        `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
-        {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_CONFIG.token}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: commitMessage,
-                content: btoa(JSON.stringify(numbers, null, 2)),
-                sha: await getFileSha()
-            })
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error(`Failed to update database: ${response.status}`);
-    }
-}
-
-async function getFileSha() {
-    const response = await fetch(
-        `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`,
-        {
-            headers: {
-                'Authorization': `token ${GITHUB_CONFIG.token}`,
-                'Accept': 'application/vnd.github.v3+json'
+                
+                const response = await fetch(APP_CONFIG.API_URL, {
+                    headers: {
+                        'Authorization': `Bearer ${password}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Data dari API sudah dalam format items
+                    state.items = data.items || [];
+                    renderItems();
+                    updateStats();
+                    showNotification('Database loaded successfully', 'success');
+                } else {
+                    throw new Error(data.error || 'Failed to load data');
+                }
+            } catch (error) {
+                console.error('Error loading items:', error);
+                showError('Failed to load database: ' + error.message);
+                showNotification('Failed to load database', 'error');
             }
         }
-    );
 
-    const data = await response.json();
-    return data.sha;
-}
+        async function saveItems(commitMessage = 'Update newsletter') {
+            try {
+                const password = APP_CONFIG.PASSWORDS[0];
+                
+                const response = await fetch(APP_CONFIG.API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${password}`
+                    },
+                    body: JSON.stringify({
+                        items: state.items,
+                        commitMessage: commitMessage,
+                        password: password
+                    })
+                });
 
-// UI rendering functions
-function renderNumbers() {
-    if (state.numbers.length === 0) {
-        elements.numbersContainer.innerHTML = `
-            <div class="loading-state">
-                <i class="fas fa-database"></i>
-                <p>Database is empty</p>
-            </div>
-        `;
-        elements.numbersCount.textContent = '0 numbers';
-        return;
-    }
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to save data');
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error saving items:', error);
+                throw error;
+            }
+        }
 
-    elements.numbersCount.textContent = `${state.numbers.length} numbers`;
-    updateLastUpdated();
-    
-    elements.numbersContainer.innerHTML = state.numbers.map(number => `
-        <div class="number-card">
-            <div class="number">${number}</div>
-            <div class="date">${formatDate(new Date())}</div>
-        </div>
-    `).join('');
-}
+        // UI Functions
+        function renderItems() {
+            if (!state.items || state.items.length === 0) {
+                elements.itemsContainer.innerHTML = `
+                    <div class="col-span-full text-center py-8">
+                        <i class="fas fa-newspaper text-3xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-400">No newsletter IDs in database</p>
+                        <p class="text-gray-500 text-sm mt-1">Click "Add Item" to add your first newsletter ID</p>
+                    </div>
+                `;
+                return;
+            }
 
-function showLoadingState() {
-    elements.numbersContainer.innerHTML = `
-        <div class="loading-state">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Loading database...</p>
-        </div>
-    `;
-    elements.refreshBtn.classList.add('animate-pulse');
-}
+            const itemsHTML = state.items.map(item => `
+                <div class="item-card glass">
+                    <div class="item-text">${item.id}</div>
+                    <div class="item-date">Added: ${formatDisplayDate(item.addedDate)}</div>
+                </div>
+            `).join('');
 
-function showErrorState(message) {
-    elements.numbersContainer.innerHTML = `
-        <div class="loading-state">
-            <i class="fas fa-exclamation-triangle"></i>
-            <p>Failed to load data</p>
-            <small>${message}</small>
-        </div>
-    `;
-}
+            elements.itemsContainer.innerHTML = itemsHTML;
+        }
 
-function updateLastUpdated() {
-    elements.lastUpdated.textContent = `Jam: ${new Date().toLocaleTimeString()}`;
-}
+        function showLoading() {
+            elements.itemsContainer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p class="mt-2 text-gray-400 text-sm">Loading database...</p>
+                </div>
+            `;
+        }
 
-function formatDate(date) {
-    return date.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
-}
+        function showError(message) {
+            elements.itemsContainer.innerHTML = `
+                <div class="col-span-full text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-400 mb-3"></i>
+                    <p class="text-red-300">${message}</p>
+                    <button onclick="loadItems()" class="btn btn-secondary mt-3">
+                        <i class="fas fa-redo mr-2"></i>Try Again
+                    </button>
+                </div>
+            `;
+        }
 
-function refreshData() {
-    loadNumbers();
-    elements.refreshBtn.classList.add('animate-pulse');
-}
+        function updateStats() {
+            elements.totalCount.textContent = state.items.length;
+            
+            // Use current time for last updated
+            const now = new Date();
+            elements.lastUpdatedTime.textContent = now.toLocaleTimeString();
+            
+            // Calculate storage used
+            const storageKB = (JSON.stringify(state.items).length / 1024).toFixed(2);
+            elements.storageUsed.textContent = `${storageKB} KB`;
+        }
 
-// Status notification
-function showStatus(message, type = 'success') {
-    elements.statusContent.className = 'toast-content';
-    elements.statusContent.classList.add(type);
-    elements.statusContent.innerHTML = `
-        <i class="fas ${getStatusIcon(type)}"></i>
-        <span>${message}</span>
-    `;
-    
-    elements.statusToast.classList.add('show');
-    setTimeout(() => {
-        elements.statusToast.classList.remove('show');
-    }, 5000);
-}
+        function formatDisplayDate(dateString) {
+            if (!dateString) return 'Unknown date';
+            
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            } catch (e) {
+                return dateString;
+            }
+        }
 
-function getStatusIcon(type) {
-    switch (type) {
-        case 'error': return 'fa-exclamation-circle';
-        case 'warning': return 'fa-exclamation-triangle';
-        default: return 'fa-check-circle';
-    }
-}
+        function validateItemId(itemId) {
+            if (!itemId) return 'Newsletter ID is required';
+            if (itemId.length < 5) return 'ID is too short (min 5 characters)';
+            if (itemId.length > 100) return 'ID is too long (max 100 characters)';
+            
+            return null;
+        }
 
-// Initialize the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', init);
-</script>
+        // Modal Functions
+        function initModal() {
+            elements.addBtn?.addEventListener('click', () => {
+                state.currentOperation = 'add';
+                showModal('Add Newsletter ID');
+            });
+
+            elements.deleteBtn?.addEventListener('click', () => {
+                state.currentOperation = 'delete';
+                showModal('Delete Newsletter ID');
+            });
+
+            elements.closeModal?.addEventListener('click', hideModal);
+            elements.cancelModal?.addEventListener('click', hideModal);
+            
+            elements.itemInput?.addEventListener('input', (e) => {
+                const value = e.target.value;
+                if (value.length >= 5) {
+                    elements.previewItem.textContent = value;
+                    elements.itemPreview.classList.remove('hidden');
+                } else {
+                    elements.itemPreview.classList.add('hidden');
+                }
+            });
+
+            elements.itemForm?.addEventListener('submit', handleItemOperation);
+            
+            // Close modal when clicking outside
+            elements.itemModal.addEventListener('click', (e) => {
+                if (e.target === elements.itemModal) {
+                    hideModal();
+                }
+            });
+        }
+
+        function showModal(title) {
+            elements.modalTitle.textContent = title;
+            elements.itemInput.value = '';
+            elements.itemPreview.classList.add('hidden');
+            
+            if (state.currentOperation === 'delete') {
+                elements.modalSubmitBtn.innerHTML = '<i class="fas fa-trash mr-2"></i>Delete';
+                elements.modalSubmitBtn.className = 'btn btn-danger flex-1';
+            } else {
+                elements.modalSubmitBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Add Item';
+                elements.modalSubmitBtn.className = 'btn btn-success flex-1';
+            }
+            
+            elements.itemModal.classList.add('show');
+            setTimeout(() => elements.itemInput.focus(), 100);
+        }
+
+        function hideModal() {
+            elements.itemModal.classList.remove('show');
+        }
+
+        async function handleItemOperation(e) {
+            e.preventDefault();
+            
+            const itemId = elements.itemInput.value.trim();
+            const validationError = validateItemId(itemId);
+            
+            if (validationError) {
+                showNotification(validationError, 'error');
+                return;
+            }
+
+            try {
+                if (state.currentOperation === 'add') {
+                    // Check if item already exists
+                    if (state.items.some(item => item.id === itemId)) {
+                        showNotification('This newsletter ID already exists', 'error');
+                        return;
+                    }
+                    
+                    // Add new item with current date
+                    state.items.push({
+                        id: itemId,
+                        addedDate: new Date().toISOString().split('T')[0]
+                    });
+                    
+                    await saveItems(`Add newsletter: ${itemId}`);
+                    showNotification(`Newsletter ID ${itemId} added successfully`, 'success');
+                } else {
+                    // Find index of item to delete
+                    const index = state.items.findIndex(item => item.id === itemId);
+                    if (index === -1) {
+                        showNotification('Newsletter ID not found in database', 'error');
+                        return;
+                    }
+                    
+                    state.items.splice(index, 1);
+                    await saveItems(`Delete newsletter: ${itemId}`);
+                    showNotification(`Newsletter ID ${itemId} deleted successfully`, 'success');
+                }
+                
+                hideModal();
+                renderItems();
+                updateStats();
+            } catch (error) {
+                console.error('Operation failed:', error);
+                showNotification('Operation failed: ' + error.message, 'error');
+            }
+        }
+
+        // Other Controls
+        function initControls() {
+            elements.refreshBtn?.addEventListener('click', () => {
+                loadItems();
+                showNotification('Refreshing database...', 'info');
+            });
+        }
+
+        // Initialize
+        function init() {
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            initMobileMenu();
+            initLogin();
+            initModal();
+            initControls();
+            
+            // Close mobile menu on window resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 769) {
+                    closeMobileMenu();
+                }
+            });
+        }
+
+        // Start the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
