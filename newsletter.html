@@ -1261,7 +1261,7 @@
                     return;
                 }
                 
-                const response = await fetch(`${APP_CONFIG.API_URL}/items`, {
+                const response = await fetch(`${APP_CONFIG.API_URL}/newsletter`, {
                     headers: {
                         'Authorization': `Bearer ${state.currentPassword}`
                     }
@@ -1306,7 +1306,7 @@
                     throw new Error('Not authenticated');
                 }
                 
-                const response = await fetch(`${APP_CONFIG.API_URL}/items`, {
+                const response = await fetch(`${APP_CONFIG.API_URL}/newsletter`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
