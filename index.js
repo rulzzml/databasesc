@@ -49,8 +49,46 @@ const APP_CONFIG = {
     PASSWORDS: ["RulzzGanteng", "admin123", "password123"]
 };
 
-// Helper: Validate password
+// ========== LOGIN API ==========
+app.post('/api/login', (req, res) => {
+    try {
+        const { password } = req.body;
+        
+        console.log('🔐 Login attempt');
+        
+        if (!password) {
+            return res.status(400).json({
+                success: false,
+                error: 'Password is required'
+            });
+        }
+        
+        if (APP_CONFIG.PASSWORDS.includes(password)) {
+            console.log('✅ Login successful');
+            return res.json({
+                success: true,
+                message: 'Login successful',
+                token: password // Return password as token for Bearer auth
+            });
+        } else {
+            console.log('❌ Login failed');
+            return res.status(401).json({
+                success: false,
+                error: 'Invalid password'
+            });
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+});
+
+// Helper: Validate password dari header atau body
 function validatePassword(req) {
+    // Cek dari header Authorization
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.substring(7);
@@ -59,6 +97,7 @@ function validatePassword(req) {
         }
     }
     
+    // Cek dari body (untuk backward compatibility)
     const bodyPassword = req.body.password;
     if (bodyPassword && APP_CONFIG.PASSWORDS.includes(bodyPassword)) {
         return bodyPassword;
@@ -802,8 +841,9 @@ app.get('/health', (req, res) => {
     res.json({
         status: 'OK',
         timestamp: new Date().toISOString(),
-        version: '3.0-dual-database',
+        version: '3.0-with-login',
         features: {
+            loginApi: true,
             multiPassword: true,
             dateTracking: true,
             phoneDatabase: true,
@@ -840,14 +880,10 @@ app.listen(PORT, () => {
     console.log(`   - Phone Numbers: ${GITHUB_CONFIG.phone.path}`);
     console.log(`   - Newsletter: ${GITHUB_CONFIG.newsletter.path}`);
     console.log(`🔑 Valid passwords: ${APP_CONFIG.PASSWORDS.join(', ')}`);
-    console.log(`✨ DUAL DATABASE FEATURES:`);
-    console.log(`   1. Phone Numbers API: GET/POST /api/numbers`);
-    console.log(`   2. Newsletter API: GET/POST /api/newsletter`);
-    console.log(`   3. Shared date update: POST /api/update-date`);
-    console.log(`   4. Auto-format conversion`);
-    console.log(`   5. Multiple password support`);
-    console.log(`\n📊 API Endpoints:`);
-    console.log(`   - Phone DB: http://localhost:${PORT}/api/numbers`);
-    console.log(`   - Newsletter DB: http://localhost:${PORT}/api/newsletter`);
-    console.log(`   - Health: http://localhost:${PORT}/health`);
+    console.log(`✨ API ENDPOINTS:`);
+    console.log(`   1. Login: POST /api/login`);
+    console.log(`   2. Phone Numbers: GET/POST /api/numbers`);
+    console.log(`   3. Newsletter: GET/POST /api/newsletter`);
+    console.log(`   4. Update Date: POST /api/update-date`);
+    console.log(`   5. Health: GET /health`);
 });
