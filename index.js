@@ -868,6 +868,14 @@ app.get('/newsletter', (req, res) => {
     res.sendFile(path.join(__dirname, 'newsletter.html'));
 });
 
+app.get('/manifest.json', (req, res) => {
+    res.sendFile(path.join(__dirname, 'manifest.json'));
+});
+
+app.get('/service-worker.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'service-worker.js'));
+});
+
 // Handle 404
 app.use((req, res) => {
     res.status(404).send('Page not found');
