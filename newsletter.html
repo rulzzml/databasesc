@@ -6,8 +6,8 @@
     <title>Database - RulzXD Newsletter</title>
     <link rel="icon" href="logo.jpg">
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#0d6efd">
-    
+    <meta name="theme-color" content="#00fff4">
+  
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
@@ -1614,12 +1614,6 @@
                 }
             });
         }
-        
-        if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js")
-    .then(() => console.log("Service Worker registered"))
-    .catch(err => console.error(err));
-}
 
         // Start the app
         document.addEventListener('DOMContentLoaded', init);

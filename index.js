@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // AES Encryption/Decryption
 const algorithm = "aes-256-cbc";
@@ -866,14 +866,6 @@ app.get('/', (req, res) => {
 
 app.get('/newsletter', (req, res) => {
     res.sendFile(path.join(__dirname, 'newsletter.html'));
-});
-
-app.get('/manifest.json', (req, res) => {
-    res.sendFile(path.join(__dirname, 'manifest.json'));
-});
-
-app.get('/service-worker.js', (req, res) => {
-    res.sendFile(path.join(__dirname, 'service-worker.js'));
 });
 
 // Handle 404
